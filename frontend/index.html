@@ -558,12 +558,13 @@
       display: none !important;
     }
 
-    /* --- COUNCIL SECTION --- */
-    .council-section {
-      max-width: 900px;
-      margin: var(--space-12) auto;
-      padding: 0 var(--space-4);
-    }
+  /* --- COUNCIL SECTION --- */
+.council-section {
+  max-width: 900px;
+  margin: var(--space-12) auto var(--space-12) 360px; /* CHANGED: left margin 360px */
+  padding: 0 var(--space-4);
+}
+
 
     .council-header {
       text-align: center;
@@ -719,19 +720,20 @@
     }
 
     /* Mobile responsive for council */
-    @media (max-width: 768px) {
-      .council-section {
-        margin: var(--space-6) auto;
-      }
+@media (max-width: 768px) {
+  .council-section {
+    margin: var(--space-6) auto; /* ALREADY CORRECT - centers on mobile */
+  }
 
-      .council-debate-container {
-        padding: var(--space-4);
-      }
+  .council-debate-container {
+    padding: var(--space-4);
+  }
 
-      .council-btn {
-        width: 100%;
-      }
-    }
+  .council-btn {
+    width: 100%;
+  }
+}
+
   </style>
 </head>
 <body>

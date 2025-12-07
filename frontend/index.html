@@ -752,7 +752,8 @@
 
       try {
         // Send to backend
-        const response = await fetch('http://127.0.0.1:5000/chat', {
+        const response = await fetch('https://depth-6oro.onrender.com/chat', {
+
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -914,7 +915,8 @@
     }
 
     // Load initial usage on page load
-    fetch("http://127.0.0.1:5000/usage")
+    fetch("https://depth-6oro.onrender.com/usage")
+
       .then(res => res.json())
       .then(data => updateUsage(data))
       .catch(() => {}); // Silently fail if backend not ready

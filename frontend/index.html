@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Depth - Mental Health Chatbot</title>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-surface: #EEF2FF;
+      --secondary: #8B5CF6;
+      --bg-main: #F9FAFB;
+      --bg-card: #FFFFFF;
+      --text-main: #111827;
+      --text-secondary: #6B7280;
+      --text-tertiary: #9CA3AF;
+      --border: #E5E7EB;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-12: 48px;
+    }
+
+    /* --- RESET --- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* --- LAYOUT --- */
+    .app-container {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+
+    /* --- SIDEBAR --- */
+    aside {
+      width: 320px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+
+    .logo-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .logo-text h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+      margin-bottom: var(--space-1);
+    }
+
+    .logo-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      letter-spacing: 0.025em;
+      text-transform: uppercase;
+    }
+
+    .personas-section {
+      padding: var(--space-4);
+    }
+
+    .personas-section h2 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      margin-bottom: var(--space-3);
+    }
+
+    .persona-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .persona-btn {
+      width: 100%;
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .persona-btn:hover {
+      background: var(--primary-surface);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .persona-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .persona-btn:active {
+      transform: scale(0.98);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: var(--space-4);
+      border-top: 1px solid var(--border);
+    }
+
+    .usage-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-2);
+      display: flex;
+      justify-content: space-between;
+      letter-spacing: 0.025em;
+    }
+
+    .usage-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .usage-bar-fill {
+      height: 100%;
+      background: var(--success);
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+
+    .usage-bar-fill.warning {
+      background: var(--warning);
+    }
+
+    .usage-bar-fill.error {
+      background: var(--error);
+    }
+
+    /* --- MAIN CHAT AREA --- */
+    main {
+      flex: 1;
+      margin-left: 320px;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-main);
+    }
+
+    .chat-header {
+      height: 72px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    /* --- EMPTY STATE --- */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: var(--space-6);
+      text-align: center;
+    }
+
+    .empty-state.hidden {
+      display: none;
+    }
+
+    .empty-state h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: var(--space-2);
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    .prompt-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      justify-content: center;
+      max-width: 600px;
+    }
+
+    .prompt-chip {
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .prompt-chip:hover {
+      background: var(--primary-surface);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .prompt-chip:active {
+      transform: scale(0.98);
+    }
+
+    /* --- MESSAGE BUBBLES --- */
+    .message {
+      display: flex;
+      animation: slideUp 0.3s ease-out;
+      max-width: 70%;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      justify-content: flex-end;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      justify-content: flex-start;
+    }
+
+    .message-content {
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .message.user .message-content {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #FFFFFF;
+      border-top-right-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .message.bot .message-content {
+      background: #F3F4F6;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+    }
+
+    /* --- TYPING INDICATOR --- */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+      background: #F3F4F6;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      border-top-left-radius: 4px;
+      max-width: 70px;
+    }
+
+    .typing-indicator .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--text-tertiary);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-indicator .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: scale(0);
+        opacity: 0.3;
+      }
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* --- INPUT AREA --- */
+    .chat-input-area {
+      min-height: 88px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: var(--space-4) var(--space-6);
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: var(--space-3);
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 52px;
+      max-height: 150px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--bg-main);
+      color: var(--text-main);
+      resize: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      background: var(--bg-card);
+    }
+
+    textarea::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .send-btn {
+      height: 52px;
+      padding: 0 24px;
+      border-radius: 14px;
+      background: var(--text-main);
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 100px;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .send-btn:active {
+      transform: scale(0.98);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* --- BANNERS --- */
+    .warning-banner {
+      padding: var(--space-3) var(--space-4);
+      background: #FEF3C7;
+      border-left: 4px solid var(--warning);
+      color: #92400E;
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-banner {
+      padding: var(--space-4);
+      background: #FEE2E2;
+      border-left: 4px solid var(--error);
+      color: #991B1B;
+      font-size: 14px;
+      display: none;
+    }
+
+    .error-banner strong {
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+
+    .error-banner ul {
+      margin: var(--space-2) 0 0 20px;
+      padding: 0;
+    }
+
+    .error-banner a {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+      aside {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+
+      aside.open {
+        transform: translateX(0);
+      }
+
+      main {
+        margin-left: 0;
+      }
+
+      .chat-header {
+        padding: 0 var(--space-4);
+      }
+
+      .chat-messages {
+        padding: var(--space-4);
+      }
+
+      .message {
+        max-width: 85%;
+      }
+
+      .chat-input-area {
+        padding: var(--space-4);
+      }
+
+      .menu-toggle {
+        display: block;
+        position: fixed;
+        top: var(--space-4);
+        left: var(--space-4);
+        z-index: 1001;
+        width: 44px;
+        height: 44px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .menu-toggle {
+        display: none;
+      }
+    }
+
+    /* --- UTILITY --- */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-avatar">D</div>
+          <div class="logo-text">
+            <h1>Depth</h1>
+            <p>Mental Health AI</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="personas-section">
+        <h2>Mentors</h2>
+        <div class="persona-list">
+          <button class="persona-btn active" data-persona="stoic" aria-label="Select Stoic mentor">
+            Stoic
+          </button>
+          <button class="persona-btn" data-persona="monk" aria-label="Select Monk mentor">
+            Monk
+          </button>
+          <button class="persona-btn" data-persona="ceo" aria-label="Select CEO mentor">
+            CEO
+          </button>
+          <button class="persona-btn" data-persona="therapist" aria-label="Select Therapist mentor">
+            Therapist
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="usage-label">
+          <span>Daily Usage</span>
+          <span id="usage-text">0%</span>
+        </div>
+        <div class="usage-bar">
+          <div class="usage-bar-fill" id="usage-fill" style="width: 0%"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main>
+      <header class="chat-header">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+        <h2 id="currentPersonaTitle">Stoic Mentor</h2>
+      </header>
+
+      <div class="warning-banner" id="warning-banner"></div>
+      <div class="error-banner" id="error-banner"></div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty-state" id="emptyState">
+          <h3>Start a conversation</h3>
+          <p>Choose a prompt below or type your own message</p>
+          <div class="prompt-chips">
+            <button class="prompt-chip" data-prompt="I feel stuck and don't know what to do">I feel stuck and don't know what to do</button>
+            <button class="prompt-chip" data-prompt="How can I manage my stress better?">How can I manage my stress better?</button>
+            <button class="prompt-chip" data-prompt="I'm struggling with motivation">I'm struggling with motivation</button>
+            <button class="prompt-chip" data-prompt="Help me understand my emotions">Help me understand my emotions</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="input-wrapper">
+          <textarea 
+            id="messageInput" 
+            placeholder="Share what's on your mind..."
+            rows="1"
+            aria-label="Message input"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="Send message">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // State management
+    let currentPersona = "stoic";
+    const conversationHistory = {
+      stoic: [],
+      monk: [],
+      ceo: [],
+      therapist: []
+    };
+
+    const personaTitles = {
+      stoic: "Stoic Mentor",
+      monk: "Monk Mentor",
+      ceo: "CEO Mentor",
+      therapist: "Therapist Mentor"
+    };
+
+    // DOM elements
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const personaButtons = document.querySelectorAll('.persona-btn');
+    const currentPersonaTitle = document.getElementById('currentPersonaTitle');
+    const chatMessages = document.getElementById('chatMessages');
+    const emptyState = document.getElementById('emptyState');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const promptChips = document.querySelectorAll('.prompt-chip');
+
+    // Mobile menu toggle
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+    }
+
+    // Persona selection
+    personaButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const persona = btn.dataset.persona;
+        selectPersona(persona);
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('open');
+        }
+      });
+    });
+
+    function selectPersona(persona) {
+      // Update active button
+      personaButtons.forEach(b => b.classList.remove('active'));
+      document.querySelector(`[data-persona="${persona}"]`).classList.add('active');
+      
+      // Update title
+      currentPersonaTitle.textContent = personaTitles[persona];
+      
+      // Reset chat display
+      currentPersona = persona;
+      chatMessages.innerHTML = '';
+      emptyState.classList.remove('hidden');
+      chatMessages.appendChild(emptyState);
+      
+      // Focus input
+      messageInput.focus();
+    }
+
+    // Prompt chips
+    promptChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.dataset.prompt;
+        messageInput.value = prompt;
+        messageInput.focus();
+        sendMessage();
+      });
+    });
+
+    // Auto-resize textarea
+    messageInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    });
+
+    // Send message
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      // Hide empty state
+      emptyState.classList.add('hidden');
+      if (emptyState.parentElement) {
+        emptyState.parentElement.removeChild(emptyState);
+      }
+
+      // Disable input while sending
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+
+      // Display user message
+      appendMessage('user', message);
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+
+      // Show typing indicator
+      const typingId = showTypingIndicator();
+
+      try {
+        // Send to backend
+        const response = await fetch('http://127.0.0.1:5000/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            persona: currentPersona,
+            message: message,
+            history: conversationHistory[currentPersona]
+          })
+        });
+
+        const data = await response.json();
+
+        // Remove typing indicator
+        removeTypingIndicator(typingId);
+
+        // Handle rate limit error
+        if (response.status === 429 || data.error === "rate_limit_exceeded") {
+          showError(data);
+          appendMessage('bot', "⚠️ Daily limit reached. See banner above for options.");
+          return;
+        }
+
+        // Handle other errors
+        if (data.error) {
+          appendMessage('bot', `Error: ${data.message || data.error}`);
+          return;
+        }
+
+        // Display bot response
+        appendMessage('bot', data.reply);
+
+        // Update usage tracking
+        if (data.usage) {
+          updateUsage(data.usage);
+        }
+
+        // Show warning if needed
+        if (data.warning) {
+          showWarning(data.warning);
+        }
+
+        // Update conversation history
+        conversationHistory[currentPersona].push(
+          { role: 'user', content: message },
+          { role: 'assistant', content: data.reply }
+        );
+
+      } catch (error) {
+        // Remove typing indicator
+        removeTypingIndicator(typingId);
+
+        // Show error message
+        appendMessage('bot', "Network error. Please check if the backend is running.");
+      } finally {
+        // Re-enable input
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    function appendMessage(role, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${role}`;
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = content;
+      
+      messageDiv.appendChild(contentDiv);
+      chatMessages.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot';
+      typingDiv.id = 'typing-indicator';
+      
+      const indicator = document.createElement('div');
+      indicator.className = 'typing-indicator';
+      indicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      
+      typingDiv.appendChild(indicator);
+      chatMessages.appendChild(typingDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      return 'typing-indicator';
+    }
+
+    function removeTypingIndicator(id) {
+      const typingEl = document.getElementById(id);
+      if (typingEl) {
+        typingEl.remove();
+      }
+    }
+
+    // Usage tracking
+    function updateUsage(usageData) {
+      if (!usageData) return;
+      
+      const percent = usageData.percent || 0;
+      const fill = document.getElementById('usage-fill');
+      const text = document.getElementById('usage-text');
+      
+      fill.style.width = percent + '%';
+      text.textContent = percent + '%';
+      
+      // Color coding
+      fill.classList.remove('warning', 'error');
+      if (percent >= 90) {
+        fill.classList.add('error');
+      } else if (percent >= 70) {
+        fill.classList.add('warning');
+      }
+    }
+
+    // Show warning banner
+    function showWarning(message) {
+      const banner = document.getElementById('warning-banner');
+      banner.textContent = message;
+      banner.style.display = 'block';
+      
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 10000);
+    }
+
+    // Show error banner
+    function showError(errorData) {
+      const banner = document.getElementById('error-banner');
+      
+      let html = `<strong>${errorData.message}</strong>`;
+      
+      if (errorData.suggestions) {
+        html += '<ul>';
+        errorData.suggestions.forEach(s => {
+          html += `<li>${s}</li>`;
+        });
+        html += '</ul>';
+      }
+      
+      if (errorData.upgrade_link) {
+        html += `<p>Need more? <a href="${errorData.upgrade_link}" target="_blank">Upgrade here</a></p>`;
+      }
+      
+      banner.innerHTML = html;
+      banner.style.display = 'block';
+      
+      // Hide after 10 seconds
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 10000);
+    }
+
+    // Load initial usage on page load
+    fetch("http://127.0.0.1:5000/usage")
+      .then(res => res.json())
+      .then(data => updateUsage(data))
+      .catch(() => {}); // Silently fail if backend not ready
+
+    // Initialize
+    messageInput.focus();
+  </script>
+</body>
+</html>

@@ -559,14 +559,15 @@
     }
 
   /* --- COUNCIL SECTION --- */
-  .council-section {
-  max-width: 900px;
-  margin-top: var(--space-12);
-  margin-bottom: var(--space-12);
-  margin-left: 360px;  /* Explicit property */
-  margin-right: auto;
-  padding: 0 var(--space-4);
+.council-section {
+  max-width: 100%;
+  margin: var(--space-12) 0;
+  padding: var(--space-6) var(--space-4);
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
 }
+
 
 
 
@@ -817,28 +818,31 @@
           <button class="send-btn" id="sendBtn" aria-label="Send message">Send</button>
         </div>
       </div>
+
+      <!-- PASTE COUNCIL SECTION HERE -->
+      <!-- Council Debate Section -->
+      <section id="councilSection" class="council-section">
+        <div class="council-header">
+          <h2>AI Council Debate</h2>
+          <p>All 4 mentors debate your question</p>
+        </div>
+
+        <div class="council-input-container">
+          <textarea 
+            id="councilQuestion" 
+            class="council-input"
+            placeholder="Ask the council anything... (e.g., Should I quit my job?)"
+            rows="3"
+          ></textarea>
+          <button id="startCouncil" class="council-btn">Convene Council</button>
+        </div>
+
+        <div id="councilDebate" class="council-debate-container"></div>
+      </section>
+
     </main>
   </div>
 
-  <!-- Council Debate Section (NEW) -->
-  <section id="councilSection" class="council-section">
-    <div class="council-header">
-      <h2>AI Council Debate</h2>
-      <p>All 4 mentors debate your question</p>
-    </div>
-
-    <div class="council-input-container">
-      <textarea 
-        id="councilQuestion" 
-        class="council-input"
-        placeholder="Ask the council anything... (e.g., Should I quit my job?)"
-        rows="3"
-      ></textarea>
-      <button id="startCouncil" class="council-btn">Convene Council</button>
-    </div>
-
-    <div id="councilDebate" class="council-debate-container"></div>
-  </section>
 
   <script>
     // State management

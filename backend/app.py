@@ -143,6 +143,101 @@ def get_usage():
         "status": usage_check["status"]
     })
 
+def generate_full_council_debate(question):
+    """Generate complete debate in single API call"""
+    global token_usage
+    
+    FULL_DEBATE_PROMPT = """You are orchestrating a council debate between 4 distinct experts. This is NOT a polite discussion—it's a dynamic, heated exchange that produces wisdom.
+
+=== PARTICIPANTS ===
+
+MARCUS (Stoic Philosopher) 🏛️
+Core: Virtue and duty above comfort. Control what you can, accept what you can't.
+Style: Direct, harsh, uses historical examples
+Triggers: Victim mentality, excuse-making
+Challenges: @Alex on profit focus, @Jung on analysis paralysis
+
+ALEX (CEO/Executive Coach) 💼
+Core: Results matter. Optimize for ROI, move fast.
+Style: Sharp, data-driven, impatient
+Triggers: Analysis paralysis, emotional reasoning
+Challenges: @Jung's slowness, @Siddhartha's detachment
+
+DR. JUNG (Depth Psychologist) 🧠
+Core: Surface problems mask deeper patterns.
+Style: Probing, pattern-focused
+Triggers: Superficial fixes, ignoring emotions
+Challenges: @Alex's rushing, @Marcus's suppression
+
+SIDDHARTHA (Buddhist Monk) 🧘
+Core: Suffering stems from attachment.
+Style: Gentle, metaphors
+Triggers: Grasping outcomes, resisting impermanence
+Challenges: @Alex's grasping, @Marcus's duty-clinging
+
+=== STRUCTURE ===
+
+ROUND 1 (4 messages): Each gives initial take. Strong opinions.
+
+ROUND 2-4 (6 messages): Heated exchange. Challenge with @Name. Use "—" for interruptions.
+
+ROUND 5-6 (2-3 messages): Integration. Grudgingly acknowledge valid points.
+
+=== SYNTHESIS ===
+After debate:
+1. What each was RIGHT about (1 sentence each)
+2. How to integrate opposing views (2 sentences)
+3. Specific next steps (3 concrete actions)
+4. Pitfalls to watch for
+
+=== TONE ===
+Serious: 60% insight, 40% conflict
+Fun: 80% entertainment, 20% insight
+Business: 50/50
+
+Question: {question}
+
+Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly."""
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are a skilled debate moderator orchestrating meaningful council discussions."},
+                {"role": "user", "content": FULL_DEBATE_PROMPT.format(question=question)}
+            ],
+            temperature=0.85,
+            max_tokens=3000,
+            top_p=0.95
+        )
+        
+        debate_text = completion.choices[0].message.content
+        actual_tokens = completion.usage.total_tokens
+        token_usage["used"] += actual_tokens
+        
+        return debate_text
+        
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@app.route('/council/test-full', methods=['POST'])
+def test_full_debate():
+    """Test single orchestrated debate"""
+    data = request.json or {}
+    question = data.get('question', '').strip()
+    
+    if not question:
+        return jsonify({"error": "Question required"}), 400
+    
+    debate = generate_full_council_debate(question)
+    
+    return jsonify({
+        "success": True,
+        "debate": debate,
+        "method": "single_orchestrated",
+        "tokens_used": token_usage["used"]
+    })
+
 @app.route("/council/debate", methods=["POST"])
 def council_debate():
     """

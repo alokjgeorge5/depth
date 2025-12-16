@@ -1168,7 +1168,7 @@
       councilDebate.innerHTML = '<div class="council-loading">🗣️ Council is debating your question...</div>';
 
       try {
-        const response = await fetch('https://depth-6oro.onrender.com/council/debate', {
+        const response = await fetch('https://depth-6oro.onrender.com/council/test-full', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1184,9 +1184,24 @@
           throw new Error(data.message || 'Council debate failed');
         }
 
-        if (data.success && data.conversation) {
-          displayCouncilDebate(data.conversation);
-        } else {
+        if (data.success && data.debate) {
+  // Display full debate text
+  councilDebate.innerHTML = `
+    <div style="
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-family: 'Inter', sans-serif;
+      color: #111827;
+    ">
+      ${data.debate}
+    </div>
+  `;
+  councilQuestion.value = '';
+}
+else {
           throw new Error('Invalid response format');
         }
 
@@ -1207,43 +1222,10 @@
       }
     }
 
-    function displayCouncilDebate(messages) {
-      councilDebate.innerHTML = '';
-
-      // Display messages with staggered animation
-      messages.forEach((msg, index) => {
-        setTimeout(() => {
-          const messageDiv = document.createElement('div');
-          messageDiv.className = `council-message ${msg.persona_id}`;
-
-          // Highlight @mentions
-          const formattedMessage = msg.message.replace(
-            /@(\w+)/g,
-            '<span class="mention">@$1</span>'
-          );
-
-          const emoji = PERSONA_EMOJIS[msg.speaker] || '💬';
-
-          messageDiv.innerHTML = `
-            <div class="council-speaker">${emoji} ${msg.speaker}</div>
-            <div class="council-message-text">${formattedMessage}</div>
-          `;
-
-          councilDebate.appendChild(messageDiv);
-
-          // Scroll to bottom
-          councilDebate.scrollTop = councilDebate.scrollHeight;
-
-        }, index * 1200); // 1.2 second delay between messages
-      });
-
-      // Clear input after displaying
-      setTimeout(() => {
-        councilQuestion.value = '';
-      }, messages.length * 1200);
-    }
+    
   </script>
 </body>
 </html>
-< ! - -   R e b u i l d   1 2 / 0 8 / 2 0 2 5   0 4 : 1 7 : 4 3   - - >  
+< ! - -   R e b u i l d   1 2 / 0 8 / 2 0 2 5   0 4 : 1 7 : 4 3   - - > 
+ 
  

@@ -5,7 +5,7 @@ from groq import Groq
 from personas import PERSONAS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-import google.generativeai as genai
+
 
 load_dotenv()
 
@@ -15,7 +15,7 @@ CORS(app)
 api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=api_key)
 
-genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+
 
 # Token tracking (simple in-memory for now)
 token_usage = {
@@ -147,7 +147,7 @@ def get_usage():
     })
 
 def generate_full_council_debate(question):
-    """Generate complete debate using Gemini Flash"""
+    """Generate complete debate using Gemini API via HTTP"""
     
     FULL_DEBATE_PROMPT = """You are orchestrating a council debate between 4 distinct experts. This is NOT a polite discussion—it's a dynamic, heated exchange that produces wisdom.
 
@@ -190,13 +190,9 @@ When triggered, Siddhartha reframes with METAPHOR and WISDOM.
 ROUND 1 (4 messages): Each gives initial take. STRONG opinions. Show personality.
 
 ROUND 2-4 (6-8 messages): HEATED exchange. 
-
 - Challenge with @Name
-
 - Use "—" for interruptions
-
 - SUBSTANTIVE disagreement, not just polite debate
-
 - Each challenge must ADVANCE thinking
 
 ROUND 5-6 (2-3 messages): Integration. GRUDGINGLY acknowledge valid points.
@@ -204,11 +200,8 @@ ROUND 5-6 (2-3 messages): Integration. GRUDGINGLY acknowledge valid points.
 === SYNTHESIS (TIGHT & ACTIONABLE) ===
 After debate:
 1. What each was RIGHT about (1 SHORT sentence each - max 15 words)
-
 2. How to integrate opposing views (2 sentences max)
-
 3. Specific next steps (3 CONCRETE actions with timeframes - NO generic advice like "set goals")
-
 4. Pitfalls to watch for (1 sentence mentioning each expert's warning)
 
 === TONE CALIBRATION ===
@@ -218,27 +211,17 @@ Business questions: 50/50
 
 === CRITICAL RULES ===
 ✅ Make disagreements SUBSTANTIVE and SHARP
-
 ✅ Show DISTINCT voices (can tell who's talking without labels)
-
 ✅ Build toward MORE clarity
-
 ✅ End with GENUINELY useful synthesis
-
 ✅ Use interruptions ("—") when triggered
-
 ✅ NO repetitive loops - each exchange adds new insight
 
 ❌ DON'T:
-
 - Agree too quickly (no "yes and" until round 5)
-
 - Be polite and academic
-
 - Give generic advice in synthesis
-
 - Let debates drag without progression
-
 - Use gratuitous insults without substance
 
 Question: {question}
@@ -246,20 +229,34 @@ Question: {question}
 Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly with proper formatting."""
 
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        import requests
         
-        response = model.generate_content(
-            FULL_DEBATE_PROMPT.format(question=question),
-            generation_config={
-                'temperature': 0.85,
-                'max_output_tokens': 3000,
+        api_key = os.getenv('GOOGLE_API_KEY')
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+        
+        payload = {
+            "contents": [{
+                "parts": [{
+                    "text": FULL_DEBATE_PROMPT.format(question=question)
+                }]
+            }],
+            "generationConfig": {
+                "temperature": 0.85,
+                "maxOutputTokens": 3000,
             }
-        )
+        }
         
-        return response.text
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        
+        result = response.json()
+        debate_text = result['candidates'][0]['content']['parts'][0]['text']
+        
+        return debate_text
         
     except Exception as e:
         return f"Error: {str(e)}"
+
 
 @app.route('/council/test-full', methods=['POST'])
 def test_full_debate():

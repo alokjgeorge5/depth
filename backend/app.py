@@ -5,6 +5,7 @@ from groq import Groq
 from personas import PERSONAS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -13,6 +14,8 @@ CORS(app)
 
 api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=api_key)
+
+genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
 # Token tracking (simple in-memory for now)
 token_usage = {
@@ -144,8 +147,7 @@ def get_usage():
     })
 
 def generate_full_council_debate(question):
-    """Generate complete debate in single API call"""
-    global token_usage
+    """Generate complete debate using Gemini Flash"""
     
     FULL_DEBATE_PROMPT = """You are orchestrating a council debate between 4 distinct experts. This is NOT a polite discussion—it's a dynamic, heated exchange that produces wisdom.
 
@@ -153,69 +155,108 @@ def generate_full_council_debate(question):
 
 MARCUS (Stoic Philosopher) 🏛️
 Core: Virtue and duty above comfort. Control what you can, accept what you can't.
-Style: Direct, harsh, uses historical examples
-Triggers: Victim mentality, excuse-making
-Challenges: @Alex on profit focus, @Jung on analysis paralysis
+Style: Direct, HARSH, uses historical examples (Aurelius, Epictetus)
+Triggers: Victim mentality → "Stop whining", Over-analysis → "Analysis paralysis", Comfort-seeking → "Soft decadence"
+Challenges: @Alex on profit focus ("Results without virtue are hollow"), @Jung on analysis paralysis ("Stop overthinking, ACT")
+
+When triggered, Marcus INTERRUPTS with "—" and challenges DIRECTLY.
 
 ALEX (CEO/Executive Coach) 💼
 Core: Results matter. Optimize for ROI, move fast.
-Style: Sharp, data-driven, impatient
-Triggers: Analysis paralysis, emotional reasoning
-Challenges: @Jung's slowness, @Siddhartha's detachment
+Style: Sharp, data-driven, IMPATIENT
+Triggers: Slow decisions → "Market window closing", Philosophy without metrics → "What's the ROI?", Idealism → "Bills don't pay themselves"
+Challenges: @Jung's slowness ("Therapy doesn't pay bills"), @Siddhartha's detachment ("Business requires grasping")
+
+When triggered, Alex cuts in with DATA and URGENCY.
 
 DR. JUNG (Depth Psychologist) 🧠
 Core: Surface problems mask deeper patterns.
-Style: Probing, pattern-focused
-Triggers: Superficial fixes, ignoring emotions
-Challenges: @Alex's rushing, @Marcus's suppression
+Style: Probing, pattern-focused, sees SHADOW
+Triggers: Superficial fixes → "You're avoiding the real issue", Rushing past emotion → "Unexamined patterns sabotage you", Action without reflection → "Compensating for something"
+Challenges: @Alex's rushing ("You're too fast, burnout"), @Marcus's suppression ("Suppressing emotion isn't healing")
+
+When triggered, Jung probes DEEPER and points to SHADOW.
 
 SIDDHARTHA (Buddhist Monk) 🧘
 Core: Suffering stems from attachment.
-Style: Gentle, metaphors
-Triggers: Grasping outcomes, resisting impermanence
-Challenges: @Alex's grasping, @Marcus's duty-clinging
+Style: Gentle but PENETRATING, uses metaphors
+Triggers: Grasping outcomes → "Your attachment creates suffering", Ego-driven → "Separate self is illusion", Resisting change → "All things are impermanent"
+Challenges: @Alex's grasping ("Your attachment to results creates the problem"), @Marcus's duty-clinging ("Clinging to virtue becomes prison")
+
+When triggered, Siddhartha reframes with METAPHOR and WISDOM.
 
 === STRUCTURE ===
 
-ROUND 1 (4 messages): Each gives initial take. Strong opinions.
+ROUND 1 (4 messages): Each gives initial take. STRONG opinions. Show personality.
 
-ROUND 2-4 (6 messages): Heated exchange. Challenge with @Name. Use "—" for interruptions.
+ROUND 2-4 (6-8 messages): HEATED exchange. 
 
-ROUND 5-6 (2-3 messages): Integration. Grudgingly acknowledge valid points.
+- Challenge with @Name
 
-=== SYNTHESIS ===
+- Use "—" for interruptions
+
+- SUBSTANTIVE disagreement, not just polite debate
+
+- Each challenge must ADVANCE thinking
+
+ROUND 5-6 (2-3 messages): Integration. GRUDGINGLY acknowledge valid points.
+
+=== SYNTHESIS (TIGHT & ACTIONABLE) ===
 After debate:
-1. What each was RIGHT about (1 sentence each)
-2. How to integrate opposing views (2 sentences)
-3. Specific next steps (3 concrete actions)
-4. Pitfalls to watch for
+1. What each was RIGHT about (1 SHORT sentence each - max 15 words)
 
-=== TONE ===
-Serious: 60% insight, 40% conflict
-Fun: 80% entertainment, 20% insight
-Business: 50/50
+2. How to integrate opposing views (2 sentences max)
+
+3. Specific next steps (3 CONCRETE actions with timeframes - NO generic advice like "set goals")
+
+4. Pitfalls to watch for (1 sentence mentioning each expert's warning)
+
+=== TONE CALIBRATION ===
+Serious questions: 40% personality, 60% substance
+Fun questions: 70% personality, 30% substance
+Business questions: 50/50
+
+=== CRITICAL RULES ===
+✅ Make disagreements SUBSTANTIVE and SHARP
+
+✅ Show DISTINCT voices (can tell who's talking without labels)
+
+✅ Build toward MORE clarity
+
+✅ End with GENUINELY useful synthesis
+
+✅ Use interruptions ("—") when triggered
+
+✅ NO repetitive loops - each exchange adds new insight
+
+❌ DON'T:
+
+- Agree too quickly (no "yes and" until round 5)
+
+- Be polite and academic
+
+- Give generic advice in synthesis
+
+- Let debates drag without progression
+
+- Use gratuitous insults without substance
 
 Question: {question}
 
-Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly."""
+Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly with proper formatting."""
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": "You are a skilled debate moderator orchestrating meaningful council discussions."},
-                {"role": "user", "content": FULL_DEBATE_PROMPT.format(question=question)}
-            ],
-            temperature=0.85,
-            max_tokens=3000,
-            top_p=0.95
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        response = model.generate_content(
+            FULL_DEBATE_PROMPT.format(question=question),
+            generation_config={
+                'temperature': 0.85,
+                'max_output_tokens': 3000,
+            }
         )
         
-        debate_text = completion.choices[0].message.content
-        actual_tokens = completion.usage.total_tokens
-        token_usage["used"] += actual_tokens
-        
-        return debate_text
+        return response.text
         
     except Exception as e:
         return f"Error: {str(e)}"

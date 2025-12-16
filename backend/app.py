@@ -246,7 +246,7 @@ Question: {question}
 Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly with proper formatting."""
 
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
         
         response = model.generate_content(
             FULL_DEBATE_PROMPT.format(question=question),

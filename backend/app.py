@@ -146,116 +146,126 @@ def get_usage():
         "status": usage_check["status"]
     })
 
+# DISABLED: Gemini function - causes 429 rate limit errors
+# Use /council/debate endpoint instead (uses Groq)
 def generate_full_council_debate(question):
-    """Generate complete debate using Gemini API via HTTP"""
+    """DISABLED: This function uses Gemini API which is rate limited.
     
-    FULL_DEBATE_PROMPT = """You are orchestrating a council debate between 4 distinct experts. This is NOT a polite discussion—it's a dynamic, heated exchange that produces wisdom.
-
-=== PARTICIPANTS ===
-
-MARCUS (Stoic Philosopher) 🏛️
-Core: Virtue and duty above comfort. Control what you can, accept what you can't.
-Style: Direct, HARSH, uses historical examples (Aurelius, Epictetus)
-Triggers: Victim mentality → "Stop whining", Over-analysis → "Analysis paralysis", Comfort-seeking → "Soft decadence"
-Challenges: @Alex on profit focus ("Results without virtue are hollow"), @Jung on analysis paralysis ("Stop overthinking, ACT")
-
-When triggered, Marcus INTERRUPTS with "—" and challenges DIRECTLY.
-
-ALEX (CEO/Executive Coach) 💼
-Core: Results matter. Optimize for ROI, move fast.
-Style: Sharp, data-driven, IMPATIENT
-Triggers: Slow decisions → "Market window closing", Philosophy without metrics → "What's the ROI?", Idealism → "Bills don't pay themselves"
-Challenges: @Jung's slowness ("Therapy doesn't pay bills"), @Siddhartha's detachment ("Business requires grasping")
-
-When triggered, Alex cuts in with DATA and URGENCY.
-
-DR. JUNG (Depth Psychologist) 🧠
-Core: Surface problems mask deeper patterns.
-Style: Probing, pattern-focused, sees SHADOW
-Triggers: Superficial fixes → "You're avoiding the real issue", Rushing past emotion → "Unexamined patterns sabotage you", Action without reflection → "Compensating for something"
-Challenges: @Alex's rushing ("You're too fast, burnout"), @Marcus's suppression ("Suppressing emotion isn't healing")
-
-When triggered, Jung probes DEEPER and points to SHADOW.
-
-SIDDHARTHA (Buddhist Monk) 🧘
-Core: Suffering stems from attachment.
-Style: Gentle but PENETRATING, uses metaphors
-Triggers: Grasping outcomes → "Your attachment creates suffering", Ego-driven → "Separate self is illusion", Resisting change → "All things are impermanent"
-Challenges: @Alex's grasping ("Your attachment to results creates the problem"), @Marcus's duty-clinging ("Clinging to virtue becomes prison")
-
-When triggered, Siddhartha reframes with METAPHOR and WISDOM.
-
-=== STRUCTURE ===
-
-ROUND 1 (4 messages): Each gives initial take. STRONG opinions. Show personality.
-
-ROUND 2-4 (6-8 messages): HEATED exchange. 
-- Challenge with @Name
-- Use "—" for interruptions
-- SUBSTANTIVE disagreement, not just polite debate
-- Each challenge must ADVANCE thinking
-
-ROUND 5-6 (2-3 messages): Integration. GRUDGINGLY acknowledge valid points.
-
-=== SYNTHESIS (TIGHT & ACTIONABLE) ===
-After debate:
-1. What each was RIGHT about (1 SHORT sentence each - max 15 words)
-2. How to integrate opposing views (2 sentences max)
-3. Specific next steps (3 CONCRETE actions with timeframes - NO generic advice like "set goals")
-4. Pitfalls to watch for (1 sentence mentioning each expert's warning)
-
-=== TONE CALIBRATION ===
-Serious questions: 40% personality, 60% substance
-Fun questions: 70% personality, 30% substance
-Business questions: 50/50
-
-=== CRITICAL RULES ===
-✅ Make disagreements SUBSTANTIVE and SHARP
-✅ Show DISTINCT voices (can tell who's talking without labels)
-✅ Build toward MORE clarity
-✅ End with GENUINELY useful synthesis
-✅ Use interruptions ("—") when triggered
-✅ NO repetitive loops - each exchange adds new insight
-
-❌ DON'T:
-- Agree too quickly (no "yes and" until round 5)
-- Be polite and academic
-- Give generic advice in synthesis
-- Let debates drag without progression
-- Use gratuitous insults without substance
-
-Question: {question}
-
-Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly with proper formatting."""
-
-    try:
-        import requests
-        
-        api_key = os.getenv('GOOGLE_API_KEY')
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
-        
-        payload = {
-            "contents": [{
-                "parts": [{
-                    "text": FULL_DEBATE_PROMPT.format(question=question)
-                }]
-            }],
-            "generationConfig": {
-                "temperature": 0.85,
-                "maxOutputTokens": 3000,
-            }
-        }
-        
-        response = requests.post(url, json=payload)
-        response.raise_for_status()
-        
-        result = response.json()
-        debate_text = result['candidates'][0]['content']['parts'][0]['text']
-        
-        return debate_text
-        
-    except Exception as e:
-        return f"Error: {str(e)}"
+    Use /council/debate endpoint instead which uses Groq.
+    This function is kept for reference but should not be called.
+    """
+    return "Error: Gemini endpoint disabled. Use /council/debate instead (Groq-based)."
+    
+    # ORIGINAL GEMINI CODE (COMMENTED OUT):
+    # """Generate complete debate using Gemini API via HTTP"""
+    # 
+    # FULL_DEBATE_PROMPT = """You are orchestrating a council debate between 4 distinct experts. This is NOT a polite discussion—it's a dynamic, heated exchange that produces wisdom.
+    # 
+    # === PARTICIPANTS ===
+    # 
+    # MARCUS (Stoic Philosopher) 🏛️
+    # Core: Virtue and duty above comfort. Control what you can, accept what you can't.
+    # Style: Direct, HARSH, uses historical examples (Aurelius, Epictetus)
+    # Triggers: Victim mentality → "Stop whining", Over-analysis → "Analysis paralysis", Comfort-seeking → "Soft decadence"
+    # Challenges: @Alex on profit focus ("Results without virtue are hollow"), @Jung on analysis paralysis ("Stop overthinking, ACT")
+    # 
+    # When triggered, Marcus INTERRUPTS with "—" and challenges DIRECTLY.
+    # 
+    # ALEX (CEO/Executive Coach) 💼
+    # Core: Results matter. Optimize for ROI, move fast.
+    # Style: Sharp, data-driven, IMPATIENT
+    # Triggers: Slow decisions → "Market window closing", Philosophy without metrics → "What's the ROI?", Idealism → "Bills don't pay themselves"
+    # Challenges: @Jung's slowness ("Therapy doesn't pay bills"), @Siddhartha's detachment ("Business requires grasping")
+    # 
+    # When triggered, Alex cuts in with DATA and URGENCY.
+    # 
+    # DR. JUNG (Depth Psychologist) 🧠
+    # Core: Surface problems mask deeper patterns.
+    # Style: Probing, pattern-focused, sees SHADOW
+    # Triggers: Superficial fixes → "You're avoiding the real issue", Rushing past emotion → "Unexamined patterns sabotage you", Action without reflection → "Compensating for something"
+    # Challenges: @Alex's rushing ("You're too fast, burnout"), @Marcus's suppression ("Suppressing emotion isn't healing")
+    # 
+    # When triggered, Jung probes DEEPER and points to SHADOW.
+    # 
+    # SIDDHARTHA (Buddhist Monk) 🧘
+    # Core: Suffering stems from attachment.
+    # Style: Gentle but PENETRATING, uses metaphors
+    # Triggers: Grasping outcomes → "Your attachment creates suffering", Ego-driven → "Separate self is illusion", Resisting change → "All things are impermanent"
+    # Challenges: @Alex's grasping ("Your attachment to results creates the problem"), @Marcus's duty-clinging ("Clinging to virtue becomes prison")
+    # 
+    # When triggered, Siddhartha reframes with METAPHOR and WISDOM.
+    # 
+    # === STRUCTURE ===
+    # 
+    # ROUND 1 (4 messages): Each gives initial take. STRONG opinions. Show personality.
+    # 
+    # ROUND 2-4 (6-8 messages): HEATED exchange. 
+    # - Challenge with @Name
+    # - Use "—" for interruptions
+    # - SUBSTANTIVE disagreement, not just polite debate
+    # - Each challenge must ADVANCE thinking
+    # 
+    # ROUND 5-6 (2-3 messages): Integration. GRUDGINGLY acknowledge valid points.
+    # 
+    # === SYNTHESIS (TIGHT & ACTIONABLE) ===
+    # After debate:
+    # 1. What each was RIGHT about (1 SHORT sentence each - max 15 words)
+    # 2. How to integrate opposing views (2 sentences max)
+    # 3. Specific next steps (3 CONCRETE actions with timeframes - NO generic advice like "set goals")
+    # 4. Pitfalls to watch for (1 sentence mentioning each expert's warning)
+    # 
+    # === TONE CALIBRATION ===
+    # Serious questions: 40% personality, 60% substance
+    # Fun questions: 70% personality, 30% substance
+    # Business questions: 50/50
+    # 
+    # === CRITICAL RULES ===
+    # ✅ Make disagreements SUBSTANTIVE and SHARP
+    # ✅ Show DISTINCT voices (can tell who's talking without labels)
+    # ✅ Build toward MORE clarity
+    # ✅ End with GENUINELY useful synthesis
+    # ✅ Use interruptions ("—") when triggered
+    # ✅ NO repetitive loops - each exchange adds new insight
+    # 
+    # ❌ DON'T:
+    # - Agree too quickly (no "yes and" until round 5)
+    # - Be polite and academic
+    # - Give generic advice in synthesis
+    # - Let debates drag without progression
+    # - Use gratuitous insults without substance
+    # 
+    # Question: {question}
+    # 
+    # Generate full debate. Start with "Council Debate: [topic]" and show all rounds clearly with proper formatting."""
+    # 
+    # try:
+    #     import requests
+    #     
+    #     api_key = os.getenv('GOOGLE_API_KEY')
+    #     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+    #     
+    #     payload = {
+    #         "contents": [{
+    #             "parts": [{
+    #                 "text": FULL_DEBATE_PROMPT.format(question=question)
+    #             }]
+    #         }],
+    #         "generationConfig": {
+    #             "temperature": 0.85,
+    #             "maxOutputTokens": 3000,
+    #         }
+    #     }
+    #     
+    #     response = requests.post(url, json=payload)
+    #     response.raise_for_status()
+    #     
+    #     result = response.json()
+    #     debate_text = result['candidates'][0]['content']['parts'][0]['text']
+    #     
+    #     return debate_text
+    #     
+    # except Exception as e:
+    #     return f"Error: {str(e)}"
 
 
 @app.route('/council/test-full', methods=['POST'])

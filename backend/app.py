@@ -11,7 +11,13 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": ["https://depth-chi.vercel.app", "https://depth-qiu9wulnc-jins-projects-ee877f80.vercel.app"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=api_key)
@@ -204,7 +210,7 @@ Generate the full debate with clear formatting."""
                 "temperature": 0.85,
                 "max_tokens": 3000
             },
-            timeout=30
+            timeout=90
         )
         response.raise_for_status()
         return response.json()['choices'][0]['message']['content']

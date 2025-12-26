@@ -92,7 +92,7 @@ def chat():
             model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.6,
-            max_tokens=512,
+            max_tokens=8000,
             top_p=0.9,
         )
         
@@ -452,7 +452,7 @@ Be SHARP. Show your distinct personality. 3-4 sentences. Make this contribution 
             model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.9,  # Higher for creative personality
-            max_tokens=300,   # INCREASED from 100
+            max_tokens=8000,
             top_p=0.95
         )
         
@@ -487,7 +487,7 @@ Answer ONLY: CONTINUE or STOP"""
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=10,
+            max_tokens=8000,
             temperature=0.3
         )
         
@@ -542,7 +542,7 @@ Start with "Council Consensus:" """
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=120,
+            max_tokens=8000,
             temperature=0.6
         )
         

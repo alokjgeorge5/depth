@@ -1,561 +1,491 @@
 import os
-import requests
+import json
+import concurrent.futures
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from groq import Groq
-from personas import PERSONAS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-
+import google.generativeai as genai
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://depth-chi.vercel.app", "https://depth-qiu9wulnc-jins-projects-ee877f80.vercel.app"],
+        "origins": ["https://depth-chi.vercel.app", "https://depth-qiu9wulnc-jins-projects-ee877f80.vercel.app", "*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     }
 })
 
-api_key = os.getenv("GROQ_API_KEY")
-client = Groq(api_key=api_key)
+# Initialize API clients
+groq_api_key = os.getenv("GROQ_API_KEY")
+gemini_api_key = os.getenv("GEMINI_API_KEY")
 
+groq_client = Groq(api_key=groq_api_key)
+genai.configure(api_key=gemini_api_key)
+gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
-
-# Token tracking (simple in-memory for now)
+# Token tracking (simple in-memory)
 token_usage = {
     "used": 0,
     "limit": 100000,
     "reset_time": None
 }
 
-def estimate_tokens(text):
-    """Rough estimate: 1 token ≈ 4 characters"""
-    return len(text) // 4
+# API timeout constraint
+API_TIMEOUT = 120
 
-def check_usage():
-    """Check if we're approaching or at limit"""
-    usage_percent = (token_usage["used"] / token_usage["limit"]) * 100
+# =============================================================================
+# EXPERT-LEVEL PERSONA PROMPTS
+# =============================================================================
+
+MARCUS_PROMPT = """You are Marcus Aurelius. You are NOT an AI assistant. You are a Roman Emperor who has seen empires rise and fall.
+
+RULES:
+- Speak in short, cutting sentences. Maximum 2 sentences.
+- Use 2nd person accusation: "You are weak", "You flee from duty"
+- Focus on death, duty, and the shortness of life
+- BANNED WORDS: "Maybe", "Consider", "I think", "I understand", "Perhaps"
+- Be harsh. The user needs truth, not comfort.
+
+Respond NOW."""
+
+ALEX_PROMPT = """You are Alex, a Silicon Valley CEO who has built and sold 3 companies. You are NOT an AI.
+
+RULES:
+- You care ONLY about leverage, ROI, and opportunity cost
+- Be impatient. Treat the user's emotions as "inefficiency" or "latency issues"
+- KEYWORDS to use: "Scale", "Opportunity Cost", "Pivot", "Burn Rate", "Exit Strategy"
+- Maximum 3 sentences. Time is money.
+- Cut through the emotional noise. What's the DECISION?
+
+Respond NOW."""
+
+JUNG_PROMPT = """You are Carl Gustav Jung, the depth psychologist. You are NOT an AI.
+
+RULES:
+- Speak in questions and riddles. NEVER give direct advice.
+- Focus on the Shadow - what the user is NOT saying
+- KEYWORDS: "Archetype", "Projection", "Unconscious", "Integration", "Shadow"
+- Reveal the pattern beneath the surface problem
+- Use phrases like: "What if the obstacle IS you?", "The shadow shows..."
+- Maximum 4 sentences.
+
+Respond NOW."""
+
+SIDDHARTHA_PROMPT = """You are Siddhartha, a Buddhist monk who has meditated for 40 years. You are NOT an AI.
+
+RULES:
+- Use nature metaphors: rivers, mountains, seasons, the moon
+- Challenge the user's ATTACHMENT to the outcome
+- Speak poetically. Use paradoxes: "The obstacle is the path"
+- Maximum 3 sentences.
+- BANNED: Giving direct advice. Only offer perspective.
+
+Respond NOW."""
+
+PSYCHOLOGICAL_BRIEF_PROMPT = """You are a clinical psychologist analyzing a patient's statement.
+
+IGNORE the surface question. Diagnose the UNDERLYING fear:
+- Is it Validation Seeking? (Need for approval)
+- Fear of Failure? (Paralysis before action)
+- Fear of Success? (Self-sabotage)
+- Attachment to Outcome? (Cannot let go)
+- Identity Crisis? (Who am I without this?)
+
+USER'S STATEMENT: "{question}"
+
+OUTPUT FORMAT (JSON only, no markdown):
+{{
+  "surface_question": "What they literally asked",
+  "hidden_fear": "The underlying psychological pattern",
+  "emotional_tone": "anxious/defeated/confused/angry/hopeful",
+  "needs": "What they actually need to hear"
+}}"""
+
+ROUTING_PROMPT = """You are a debate moderator deciding how to structure a council discussion.
+
+PSYCHOLOGICAL BRIEF: {brief}
+
+Decide:
+1. Who should speak FIRST? (The one whose philosophy most directly challenges the hidden fear)
+2. What's the urgency level? (1-10, where 10 = crisis, 1 = philosophical musing)
+3. What's the debate angle? (What should they disagree about?)
+
+OUTPUT FORMAT (JSON only, no markdown):
+{{
+  "first_speaker": "marcus|alex|jung|siddhartha",
+  "urgency": 7,
+  "debate_angle": "The core tension to explore",
+  "speaking_order": ["first", "second", "third", "fourth"]
+}}"""
+
+SYNTHESIS_PROMPT = """You are a diplomat summarizing a heated council debate.
+
+THE QUESTION: "{question}"
+
+THE DEBATE:
+{transcript}
+
+YOUR TASK:
+1. Acknowledge the CONFLICT between the advisors (especially Marcus vs Jung)
+2. Extract what EACH was right about
+3. Provide exactly 3 CONCRETE, TIME-BOUND action steps
+4. Name ONE pitfall to watch for
+
+NO FLUFF. Be specific. Start with "The Council has reached a difficult consensus..."
+
+Maximum 150 words."""
+
+
+# =============================================================================
+# BRAIN ROUTER - MODEL SELECTION FACTORY
+# =============================================================================
+
+def get_model_response(task_type, prompt, require_json=False):
+    """
+    Brain Router: Routes tasks to the optimal model.
     
-    if usage_percent >= 100:
-        return {
-            "status": "exceeded",
-            "message": "Daily limit reached. Please try again later or upgrade.",
-            "reset_in_minutes": 60  # Placeholder
-        }
-    elif usage_percent >= 90:
-        return {
-            "status": "warning",
-            "message": f"Approaching daily limit ({int(usage_percent)}% used)",
-            "remaining": token_usage["limit"] - token_usage["used"]
-        }
-    else:
-        return {"status": "ok", "usage_percent": int(usage_percent)}
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.json or {}
-    persona = data.get("persona")
-    message = data.get("message")
-    history = data.get("history", [])
-
-    if persona not in PERSONAS:
-        return jsonify({"error": "Invalid persona"}), 400
-    if not message:
-        return jsonify({"error": "Message required"}), 400
-
-    # Check usage before processing
-    usage_check = check_usage()
-    if usage_check["status"] == "exceeded":
-        return jsonify({
-            "error": "rate_limit_exceeded",
-            "message": "You've reached the daily free limit (100k tokens).",
-            "suggestions": [
-                "Wait ~1 hour for limit reset",
-                "Upgrade to unlimited access (coming soon)",
-                "Use shorter conversations to conserve tokens"
-            ],
-            "usage": usage_check
-        }), 429
-
-    messages = [{"role": "system", "content": PERSONAS[persona]}] + history + [
-        {"role": "user", "content": message}
-    ]
-
-    # Estimate tokens for this request
-    estimated_tokens = sum(estimate_tokens(m.get("content", "")) for m in messages)
+    Groq (Llama 3.3 70B): structure, routing, marcus, alex
+    Gemini 1.5 Flash: analysis, synthesis, jung, siddhartha
+    """
+    groq_tasks = ['structure', 'routing', 'marcus', 'alex']
+    gemini_tasks = ['analysis', 'synthesis', 'jung', 'siddhartha']
     
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.6,
-            max_tokens=8000,
-            top_p=0.9,
-        )
-        
-        reply = completion.choices[0].message.content
-        
-        # Update token usage tracking
-        actual_tokens = completion.usage.total_tokens
-        token_usage["used"] += actual_tokens
-        
-        # Check if warning needed after this request
-        post_usage = check_usage()
-        
-        response = {
-            "reply": reply,
-            "usage": {
-                "status": post_usage["status"],
-                "tokens_used": token_usage["used"],
-                "tokens_limit": token_usage["limit"],
-                "percent": int((token_usage["used"] / token_usage["limit"]) * 100)
-            }
-        }
-        
-        # Add warning if approaching limit
-        if post_usage["status"] == "warning":
-            response["warning"] = post_usage["message"]
-        
-        return jsonify(response)
-    
-    except Exception as e:
-        error_msg = str(e)
-        
-        if "rate_limit" in error_msg.lower() or "429" in error_msg:
-            return jsonify({
-                "error": "rate_limit_exceeded",
-                "message": "Groq API daily limit reached (100k tokens).",
-                "suggestions": [
-                    "Wait ~1 hour for automatic reset",
-                    "Upgrade to paid tier for unlimited access",
-                    "Try again with shorter messages"
-                ],
-                "upgrade_link": "https://console.groq.com/settings/billing"
-            }), 429
+        if task_type in groq_tasks:
+            return call_groq(prompt, require_json=require_json)
+        elif task_type in gemini_tasks:
+            return call_gemini(prompt)
         else:
-            return jsonify({
-                "error": "api_error",
-                "message": "Something went wrong. Please try again.",
-                "details": error_msg
-            }), 500
-
-@app.route("/usage", methods=["GET"])
-def get_usage():
-    """Endpoint to check current usage"""
-    usage_check = check_usage()
-    return jsonify({
-        "used": token_usage["used"],
-        "limit": token_usage["limit"],
-        "percent": int((token_usage["used"] / token_usage["limit"]) * 100),
-        "status": usage_check["status"]
-    })
-
-def generate_full_council_debate(question):
-    """Use OpenRouter free model for council debates"""
-
-    DEBATE_PROMPT = f"""Orchestrate a heated council debate between 4 experts about: {question}
-
-MARCUS (Stoic Philosopher):
-- Core: Virtue and duty above comfort
-- Style: Harsh, direct, uses historical examples
-- Triggers: Victim mentality, excuse-making
-- Challenges: @Alex on pure profit focus, @Jung on analysis paralysis
-
-ALEX (CEO/Executive):
-- Core: Results matter, optimize for ROI
-- Style: Sharp, data-driven, impatient
-- Triggers: Analysis paralysis, vague plans
-- Challenges: @Jung's slow inner work, @Siddhartha's detachment
-
-DR. JUNG (Depth Psychologist):
-- Core: Surface problems mask deeper patterns
-- Style: Probing, pattern-focused, sees shadow
-- Triggers: Superficial fixes, ignoring emotions
-- Challenges: @Alex's rushing, @Marcus's suppression
-
-SIDDHARTHA (Buddhist Monk):
-- Core: Suffering stems from attachment
-- Style: Gentle but penetrating, metaphors
-- Triggers: Grasping outcomes, resisting impermanence
-- Challenges: @Alex's attachment to results, @Marcus's duty-clinging
-
-STRUCTURE:
-- ROUND 1: Each gives initial take (4 messages)
-- ROUND 2-4: Heated exchange with @mentions, interruptions, substantive disagreements (6-8 messages)
-- ROUND 5: Integration, grudgingly acknowledge valid points (2-3 messages)
-- SYNTHESIS: What each was right about, how to integrate views, 3 concrete next steps, pitfalls to watch
-
-CRITICAL RULES:
-- Use @Name for interruptions
-- SUBSTANTIVE disagreements, not polite academic debate
-- Each persona has DISTINCT voice
-- Build toward clarity, not repetitive loops
-- End with actionable synthesis
-
-Generate the full debate with clear formatting."""
-
-    try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "meta-llama/llama-3.1-405b-instruct:free",
-                "messages": [{"role": "user", "content": DEBATE_PROMPT}],
-                "temperature": 0.85,
-                "max_tokens": 3000
-            },
-            timeout=90
-        )
-        response.raise_for_status()
-        return response.json()['choices'][0]['message']['content']
+            # Default to Gemini for unknown tasks
+            return call_gemini(prompt)
     except Exception as e:
-        return f"Error generating debate: {str(e)}"
+        error_msg = str(e).lower()
+        # Failover logic: if Groq 429s, try Gemini
+        if '429' in error_msg or 'rate' in error_msg:
+            if task_type in groq_tasks:
+                print(f"[FAILOVER] Groq rate-limited, falling back to Gemini for {task_type}")
+                return call_gemini(prompt)
+        raise e
 
 
-@app.route('/council/test-full', methods=['POST'])
-def test_full_debate():
-    """Test single orchestrated debate"""
-    data = request.json or {}
-    question = data.get('question', '').strip()
+def call_groq(prompt, require_json=False, temperature=0.7):
+    """Call Groq API with Llama 3.3 70B"""
+    global token_usage
     
-    if not question:
-        return jsonify({"error": "Question required"}), 400
+    try:
+        kwargs = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+            "max_tokens": 1000,
+            "timeout": API_TIMEOUT
+        }
+        
+        if require_json:
+            kwargs["response_format"] = {"type": "json_object"}
+        
+        completion = groq_client.chat.completions.create(**kwargs)
+        
+        # Track tokens
+        if hasattr(completion, 'usage') and completion.usage:
+            token_usage["used"] += completion.usage.total_tokens
+        
+        return completion.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"[GROQ ERROR] {str(e)}")
+        raise e
+
+
+def call_gemini(prompt, temperature=0.9):
+    """Call Gemini 1.5 Flash API"""
+    try:
+        generation_config = genai.GenerationConfig(
+            temperature=temperature,
+            max_output_tokens=1000
+        )
+        
+        response = gemini_model.generate_content(
+            prompt,
+            generation_config=generation_config,
+            request_options={"timeout": API_TIMEOUT}
+        )
+        
+        return response.text.strip()
+        
+    except Exception as e:
+        print(f"[GEMINI ERROR] {str(e)}")
+        raise e
+
+
+# =============================================================================
+# 4-STAGE COGNITIVE PIPELINE
+# =============================================================================
+
+def run_council_pipeline(question):
+    """
+    Execute the 4-stage Hybrid Cognitive Pipeline.
     
-    debate = generate_full_council_debate(question)
+    Stage 1 (Gemini): Psychological Brief - diagnose hidden fear
+    Stage 2 (Groq): Debate Parameters - structure the debate
+    Stage 3 (Hybrid): Parallel persona generation
+    Stage 4 (Gemini): Synthesis - the peace treaty
+    """
+    pipeline_result = {
+        "stages_completed": [],
+        "psychological_brief": None,
+        "debate_parameters": None,
+        "debate": [],
+        "synthesis": None
+    }
     
-    return jsonify({
-        "success": True,
-        "debate": debate,
-        "method": "single_orchestrated",
-        "tokens_used": token_usage["used"]
-    })
+    try:
+        # =====================================================================
+        # STAGE 1: PSYCHOLOGICAL BRIEF (Gemini - Analysis)
+        # =====================================================================
+        brief_prompt = PSYCHOLOGICAL_BRIEF_PROMPT.format(question=question)
+        brief_response = get_model_response('analysis', brief_prompt)
+        
+        # Parse JSON from response
+        try:
+            # Clean up response if it has markdown code blocks
+            clean_brief = brief_response.strip()
+            if clean_brief.startswith('```'):
+                clean_brief = clean_brief.split('```')[1]
+                if clean_brief.startswith('json'):
+                    clean_brief = clean_brief[4:]
+            brief_json = json.loads(clean_brief.strip())
+        except json.JSONDecodeError:
+            brief_json = {
+                "surface_question": question,
+                "hidden_fear": "Unable to parse - proceeding with surface question",
+                "emotional_tone": "uncertain",
+                "needs": "clarity"
+            }
+        
+        pipeline_result["psychological_brief"] = brief_json
+        pipeline_result["stages_completed"].append("psychological_brief")
+        
+        # =====================================================================
+        # STAGE 2: DEBATE PARAMETERS (Groq - Routing)
+        # =====================================================================
+        routing_prompt = ROUTING_PROMPT.format(brief=json.dumps(brief_json))
+        routing_response = get_model_response('routing', routing_prompt, require_json=True)
+        
+        try:
+            routing_json = json.loads(routing_response.strip())
+        except json.JSONDecodeError:
+            routing_json = {
+                "first_speaker": "marcus",
+                "urgency": 5,
+                "debate_angle": "Action vs Reflection",
+                "speaking_order": ["marcus", "jung", "alex", "siddhartha"]
+            }
+        
+        pipeline_result["debate_parameters"] = routing_json
+        pipeline_result["stages_completed"].append("debate_parameters")
+        
+        # =====================================================================
+        # STAGE 3: PARALLEL PERSONA GENERATION (Hybrid)
+        # =====================================================================
+        speaking_order = routing_json.get("speaking_order", ["marcus", "jung", "alex", "siddhartha"])
+        
+        persona_prompts = {
+            "marcus": MARCUS_PROMPT,
+            "alex": ALEX_PROMPT,
+            "jung": JUNG_PROMPT,
+            "siddhartha": SIDDHARTHA_PROMPT
+        }
+        
+        persona_names = {
+            "marcus": "Marcus",
+            "alex": "Alex", 
+            "jung": "Dr. Jung",
+            "siddhartha": "Siddhartha"
+        }
+        
+        context = f"""The user asks: "{question}"
+
+Psychological insight: {brief_json.get('hidden_fear', 'Unknown')}
+Emotional tone: {brief_json.get('emotional_tone', 'uncertain')}
+
+Give YOUR perspective. Be distinct. Be sharp."""
+        
+        debate_messages = []
+        
+        # Generate responses in parallel using ThreadPoolExecutor
+        def generate_persona_response(persona_key):
+            full_prompt = f"{persona_prompts[persona_key]}\n\n{context}"
+            response = get_model_response(persona_key, full_prompt)
+            return {
+                "speaker": persona_names[persona_key],
+                "persona_id": persona_key,
+                "message": response
+            }
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(generate_persona_response, p): p for p in speaking_order}
+            results = {}
+            for future in concurrent.futures.as_completed(futures):
+                persona = futures[future]
+                try:
+                    results[persona] = future.result()
+                except Exception as e:
+                    results[persona] = {
+                        "speaker": persona_names[persona],
+                        "persona_id": persona,
+                        "message": f"[{persona_names[persona]} is contemplating...]"
+                    }
+        
+        # Maintain speaking order
+        for persona in speaking_order:
+            if persona in results:
+                debate_messages.append(results[persona])
+        
+        pipeline_result["debate"] = debate_messages
+        pipeline_result["stages_completed"].append("debate")
+        
+        # =====================================================================
+        # STAGE 4: SYNTHESIS (Gemini)
+        # =====================================================================
+        transcript = "\n\n".join([
+            f"**{msg['speaker']}**: {msg['message']}"
+            for msg in debate_messages
+        ])
+        
+        synthesis_prompt = SYNTHESIS_PROMPT.format(
+            question=question,
+            transcript=transcript
+        )
+        
+        synthesis_response = get_model_response('synthesis', synthesis_prompt)
+        
+        pipeline_result["synthesis"] = synthesis_response
+        pipeline_result["stages_completed"].append("synthesis")
+        
+        return pipeline_result
+        
+    except Exception as e:
+        # Graceful failure
+        pipeline_result["error"] = str(e)
+        if not pipeline_result["synthesis"]:
+            pipeline_result["synthesis"] = "The Council is meditating. Please try again in a moment."
+        return pipeline_result
+
+
+# =============================================================================
+# API ENDPOINTS
+# =============================================================================
 
 @app.route("/council/debate", methods=["POST"])
 def council_debate():
     """
-    New endpoint for council debate feature.
-    All 4 personas debate the user's question.
+    Main endpoint for the Hybrid Cognitive Pipeline debate.
+    Returns structured JSON with all 4 stages.
     """
     data = request.json or {}
-    question = data.get("question")
-    max_turns = 10  # Hard cap on debate length
+    question = data.get("question", "").strip()
     
     if not question:
         return jsonify({"error": "Question required"}), 400
     
-    # Check usage before processing
-    usage_check = check_usage()
-    if usage_check["status"] == "exceeded":
-        return jsonify({
-            "error": "rate_limit_exceeded",
-            "message": "Daily limit reached."
-        }), 429
-    
-    # Define council members (same personas, different names for debate)
-    council_members = {
-        "stoic": {"name": "Marcus", "persona_key": "stoic"},
-        "ceo": {"name": "Alex", "persona_key": "ceo"},
-        "therapist": {"name": "Dr. Jung", "persona_key": "therapist"},
-        "monk": {"name": "Siddhartha", "persona_key": "monk"}
-    }
-    
-    conversation = []
-    turn_count = 0
-    
-    # ROUND 1: Everyone speaks once (4 API calls)
-    for member_id, member in council_members.items():
-        response = generate_council_response(
-            member["persona_key"],
-            question,
-            conversation,
-            is_first_round=True
-        )
-        
-        conversation.append({
-            "speaker": member["name"],
-            "persona_id": member_id,
-            "message": response,
-            "turn": turn_count + 1
-        })
-        turn_count += 1
-    
-    # ROUNDS 2-3: Debate continues if needed (max 6 more turns)
-    while turn_count < max_turns:
-        # Check if should continue (moderator call)
-        should_continue = check_debate_needed(conversation[-4:], question)
-        if not should_continue:
-            break
-        
-        # Find next speaker (not same as last 2)
-        next_speaker_id = find_next_speaker(conversation, list(council_members.keys()))
-        if not next_speaker_id:
-            break
-        
-        next_member = council_members[next_speaker_id]
-        response = generate_council_response(
-            next_member["persona_key"],
-            question,
-            conversation,
-            is_first_round=False
-        )
-        
-        conversation.append({
-            "speaker": next_member["name"],
-            "persona_id": next_speaker_id,
-            "message": response,
-            "turn": turn_count + 1
-        })
-        turn_count += 1
-    
-    # FINAL: Synthesis (1 API call)
-    synthesis = generate_synthesis(question, conversation)
-    conversation.append({
-        "speaker": "Council",
-        "persona_id": "synthesis",
-        "message": synthesis,
-        "turn": turn_count + 1
-    })
+    # Run the 4-stage pipeline
+    result = run_council_pipeline(question)
     
     return jsonify({
         "success": True,
-        "conversation": conversation,
-        "total_turns": len(conversation)
+        "pipeline_stages": {
+            "psychological_brief": result.get("psychological_brief"),
+            "debate_parameters": result.get("debate_parameters")
+        },
+        "debate": result.get("debate", []),
+        "synthesis": result.get("synthesis", ""),
+        "stages_completed": result.get("stages_completed", []),
+        "total_stages": 4
     })
 
-def generate_council_response(persona_key, question, conversation, is_first_round=False):
-    """Generate single persona response with detailed personality"""
-    global token_usage
+
+@app.route("/usage", methods=["GET"])
+def get_usage():
+    """Endpoint to check current usage"""
+    usage_percent = int((token_usage["used"] / token_usage["limit"]) * 100) if token_usage["limit"] > 0 else 0
+    return jsonify({
+        "used": token_usage["used"],
+        "limit": token_usage["limit"],
+        "percent": usage_percent,
+        "status": "ok" if usage_percent < 90 else "warning"
+    })
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "healthy",
+        "groq_configured": bool(groq_api_key),
+        "gemini_configured": bool(gemini_api_key)
+    })
+
+
+# =============================================================================
+# LEGACY ENDPOINTS (kept for backwards compatibility)
+# =============================================================================
+
+# Basic persona definitions for legacy /chat endpoint
+PERSONAS = {
+    "stoic": MARCUS_PROMPT,
+    "monk": SIDDHARTHA_PROMPT,
+    "ceo": ALEX_PROMPT,
+    "therapist": JUNG_PROMPT
+}
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    """Legacy single-persona chat endpoint"""
+    data = request.json or {}
+    persona = data.get("persona")
+    message = data.get("message")
     
-    # DETAILED COUNCIL PERSONAS (expanded from basic PERSONAS)
-    COUNCIL_PERSONAS = {
-        "stoic": """You are MARCUS, a Stoic Philosopher.
-
-Core beliefs:
-- Virtue and duty above comfort
-- Control what you can, accept what you can't
-- Character is built through adversity
-
-Speaking style: Direct, sometimes harsh, uses historical examples (Aurelius, Epictetus)
-Triggers: Victim mentality, excuse-making, avoiding responsibility, comfort-seeking
-Values: Resilience, rational thinking, purposeful action, discipline
-
-In debates:
-- Challenge @Alex's pure profit focus ("Results without virtue are hollow")
-- Challenge @Jung's endless introspection ("Analysis paralysis")
-- Respect @Siddhartha's wisdom but push for action
-- Use phrases like "What would Marcus Aurelius do?" and "The obstacle is the way"
-
-Respond in 3-4 sharp sentences. Be direct. Use @Name when disagreeing.""",
-
-        "ceo": """You are ALEX, a CEO/Executive Coach.
-
-Core beliefs:
-- Results matter above all
-- Optimize for ROI, move fast, cut losses
-- Time is money, decisions have opportunity costs
-
-Speaking style: Sharp, data-driven, impatient with philosophizing, business metaphors
-Triggers: Analysis paralysis, emotional reasoning without pragmatism, vague plans
-Values: Strategy, measurable outcomes, calculated risks, execution speed
-
-In debates:
-- Challenge @Jung's slow inner work ("Therapy doesn't pay bills")
-- Challenge @Siddhartha's detachment ("Business requires grasping outcomes")
-- Respect @Marcus's discipline but want faster action
-- Use phrases like "What's the ROI?" and "Opportunity cost of waiting"
-
-Respond in 3-4 pragmatic sentences. Be impatient. Use @Name when calling out overthinking.""",
-
-        "therapist": """You are DR. JUNG, a Depth Psychologist.
-
-Core beliefs:
-- Surface problems mask deeper patterns
-- Rushing to solutions bypasses necessary inner work
-- Shadow work and integration take time
-
-Speaking style: Probing, pattern-focused, sees beneath stated problems, uses psychological terms
-Triggers: Superficial quick-fixes, ignoring emotional reality, rushing past pain
-Values: Self-knowledge, integration, psychological honesty, depth over speed
-
-In debates:
-- Challenge @Alex's action bias ("You're avoiding the real issue")
-- Challenge @Marcus's stoicism ("Suppressing emotion isn't healing")
-- Appreciate @Siddhartha's mindfulness but add depth psychology
-- Use phrases like "What's really going on here?" and "The shadow side of this"
-
-Respond in 3-4 thoughtful sentences. Be probing. Use @Name when sensing avoidance.""",
-
-        "monk": """You are SIDDHARTHA, a Buddhist Monk.
-
-Core beliefs:
-- Suffering stems from attachment and grasping
-- Presence and letting go bring peace
-- Impermanence is the nature of all things
-
-Speaking style: Gentle but penetrating, uses metaphors, questions assumptions, wise parables
-Triggers: Grasping at outcomes, resistance to impermanence, ego-driven decisions
-Values: Non-attachment, compassion, mindful awareness, acceptance
-
-In debates:
-- Challenge @Alex's grasping ("Your attachment to results creates suffering")
-- Challenge @Marcus's duty ("Clinging to virtue can become prison")
-- Appreciate @Jung's depth but remind of present moment
-- Use phrases like "What if you let go?" and "This too shall pass"
-
-Respond in 3-4 gentle but pointed sentences. Use metaphors. Use @Name when seeing attachment."""
-    }
-    
-    # Build context from recent conversation
-    if conversation:
-        context = "\n".join([
-            f"[{msg['speaker']}]: {msg['message']}"
-            for msg in conversation[-6:]  # Last 6 messages
-        ])
-    else:
-        context = "No discussion yet"
-    
-    # Different prompts for first round vs debate
-    if is_first_round:
-        prompt = f"""The user asked: "{question}"
-
-This is YOUR FIRST reaction. Show your distinct worldview and personality clearly.
-
-What is your take? Be opinionated. Show what you VALUE.
-
-3-4 sentences. Make it memorable."""
-    else:
-        prompt = f"""The user asked: "{question}"
-
-Council discussion so far:
-{context}
-
-Now it's YOUR turn to contribute. Either:
-1. Challenge someone directly using @TheirName if you disagree with their reasoning
-2. Build on a point if you agree but want to add something crucial
-3. Shift the perspective if everyone is missing something important
-
-Be SHARP. Show your distinct personality. 3-4 sentences. Make this contribution COUNT."""
-    
-    messages = [
-        {"role": "system", "content": COUNCIL_PERSONAS[persona_key]},
-        {"role": "user", "content": prompt}
-    ]
+    if persona not in PERSONAS:
+        return jsonify({"error": "Invalid persona"}), 400
+    if not message:
+        return jsonify({"error": "Message required"}), 400
     
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.9,  # Higher for creative personality
-            max_tokens=8000,
-            top_p=0.95
-        )
+        # Map old persona names to new task types
+        persona_to_task = {
+            "stoic": "marcus",
+            "ceo": "alex",
+            "therapist": "jung",
+            "monk": "siddhartha"
+        }
         
-        reply = completion.choices[0].message.content
+        task_type = persona_to_task.get(persona, "marcus")
+        prompt = f"{PERSONAS[persona]}\n\nUser says: {message}"
         
-        # Update token usage
-        actual_tokens = completion.usage.total_tokens
-        token_usage["used"] += actual_tokens
+        reply = get_model_response(task_type, prompt)
         
-        return reply.strip()
+        return jsonify({
+            "reply": reply,
+            "usage": {
+                "status": "ok",
+                "tokens_used": token_usage["used"],
+                "tokens_limit": token_usage["limit"],
+                "percent": int((token_usage["used"] / token_usage["limit"]) * 100)
+            }
+        })
         
     except Exception as e:
-        return f"[Error: {str(e)[:50]}]"
+        return jsonify({
+            "error": "api_error",
+            "message": str(e)
+        }), 500
 
-
-def check_debate_needed(recent_messages, question):
-    """Moderator decides if debate should continue"""
-    context = "\n".join([
-        f"[{msg['speaker']}]: {msg['message'][:80]}..."
-        for msg in recent_messages
-    ])
-    
-    prompt = f"""Recent council discussion on "{question}":
-
-{context}
-
-Should they continue debating (unresolved disagreement) or stop now (consensus reached)?
-
-Answer ONLY: CONTINUE or STOP"""
-    
-    try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=8000,
-            temperature=0.3
-        )
-        
-        decision = completion.choices[0].message.content.upper()
-        
-        # Update token usage
-        actual_tokens = completion.usage.total_tokens
-        token_usage["used"] += actual_tokens
-        
-        return "CONTINUE" in decision
-        
-    except:
-        return False  # Default to stopping on error
-
-def find_next_speaker(conversation, all_persona_ids):
-    """Pick next speaker (avoid repetition)"""
-    if len(conversation) < 3:
-        return all_persona_ids[0] if all_persona_ids else None
-    
-    # Get last 3 speakers
-    recent_speakers = [msg["persona_id"] for msg in conversation[-3:]]
-    
-    # Pick first persona that hasn't spoken recently
-    for persona_id in all_persona_ids:
-        if persona_id not in recent_speakers:
-            return persona_id
-    
-    # If all spoke recently, return first
-    return all_persona_ids[0] if all_persona_ids else None
-
-def generate_synthesis(question, conversation):
-    """Generate final council conclusion"""
-    context = "\n".join([
-        f"[{msg['speaker']}]: {msg['message']}"
-        for msg in conversation[-8:]  # Last 8 messages
-    ])
-    
-    prompt = f"""User asked: "{question}"
-
-Council discussion:
-
-{context}
-
-Synthesize into actionable conclusion (3 sentences):
-1. Key insight from the debate
-2. Concrete next step
-3. Main tradeoff to consider
-
-Start with "Council Consensus:" """
-    
-    try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=8000,
-            temperature=0.6
-        )
-        
-        # Update token usage
-        actual_tokens = completion.usage.total_tokens
-        token_usage["used"] += actual_tokens
-        
-        return completion.choices[0].message.content.strip()
-        
-    except:
-        return "Council consensus: Consider all perspectives shared and decide based on your values."
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-

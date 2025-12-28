@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Depth - Mental Health Chatbot</title>
+  <title>Depth - AI Council Debate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Georgia&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #4F46E5;
@@ -26,9 +27,18 @@
       --space-6: 24px;
       --space-8: 32px;
       --space-12: 48px;
+      
+      /* Persona Colors */
+      --marcus-bg: #3a3a3a;
+      --marcus-text: #f5f5f5;
+      --jung-bg: #312e81;
+      --jung-text: #e0e7ff;
+      --alex-bg: #1e40af;
+      --alex-text: #dbeafe;
+      --siddhartha-bg: #d97706;
+      --siddhartha-text: #fffbeb;
     }
 
-    /* --- RESET --- */
     * {
       margin: 0;
       padding: 0;
@@ -43,7 +53,6 @@
       line-height: 1.5;
     }
 
-    /* --- LAYOUT --- */
     .app-container {
       display: flex;
       max-width: 1400px;
@@ -51,7 +60,7 @@
       min-height: 100vh;
     }
 
-    /* --- SIDEBAR --- */
+    /* Sidebar */
     aside {
       width: 320px;
       background: var(--bg-card);
@@ -153,10 +162,6 @@
       border-color: var(--primary);
     }
 
-    .persona-btn:active {
-      transform: scale(0.98);
-    }
-
     .sidebar-footer {
       margin-top: auto;
       padding: var(--space-4);
@@ -170,7 +175,6 @@
       margin-bottom: var(--space-2);
       display: flex;
       justify-content: space-between;
-      letter-spacing: 0.025em;
     }
 
     .usage-bar {
@@ -187,389 +191,25 @@
       border-radius: 3px;
     }
 
-    .usage-bar-fill.warning {
-      background: var(--warning);
-    }
+    .usage-bar-fill.warning { background: var(--warning); }
+    .usage-bar-fill.error { background: var(--error); }
 
-    .usage-bar-fill.error {
-      background: var(--error);
-    }
-
-    /* --- MAIN CHAT AREA --- */
+    /* Main Area */
     main {
       flex: 1;
       margin-left: 320px;
       display: flex;
       flex-direction: column;
       background: var(--bg-main);
-    }
-
-    .chat-header {
-      height: 72px;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 0 var(--space-6);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .chat-header h2 {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
       padding: var(--space-6);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
     }
 
-    .chat-messages::-webkit-scrollbar {
-      width: 8px;
+    /* Council Section */
+    .council-section {
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
     }
-
-    .chat-messages::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 4px;
-    }
-
-    /* --- EMPTY STATE --- */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      padding: var(--space-6);
-      text-align: center;
-    }
-
-    .empty-state.hidden {
-      display: none;
-    }
-
-    .empty-state h3 {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-main);
-      margin-bottom: var(--space-2);
-    }
-
-    .empty-state p {
-      font-size: 15px;
-      color: var(--text-secondary);
-      margin-bottom: var(--space-6);
-    }
-
-    .prompt-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      justify-content: center;
-      max-width: 600px;
-    }
-
-    .prompt-chip {
-      padding: var(--space-3) var(--space-4);
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      font-size: 14px;
-      color: var(--text-main);
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-    }
-
-    .prompt-chip:hover {
-      background: var(--primary-surface);
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .prompt-chip:active {
-      transform: scale(0.98);
-    }
-
-    /* --- MESSAGE BUBBLES --- */
-    .message {
-      display: flex;
-      animation: slideUp 0.3s ease-out;
-      max-width: 70%;
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .message.user {
-      align-self: flex-end;
-      justify-content: flex-end;
-    }
-
-    .message.bot {
-      align-self: flex-start;
-      justify-content: flex-start;
-    }
-
-    .message-content {
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 15px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .message.user .message-content {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #FFFFFF;
-      border-top-right-radius: 4px;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    .message.bot .message-content {
-      background: #F3F4F6;
-      color: var(--text-main);
-      border: 1px solid var(--border);
-      border-top-left-radius: 4px;
-    }
-
-    /* --- TYPING INDICATOR --- */
-    .typing-indicator {
-      display: flex;
-      gap: 4px;
-      padding: 12px 16px;
-      background: #F3F4F6;
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      border-top-left-radius: 4px;
-      max-width: 70px;
-    }
-
-    .typing-indicator .dot {
-      width: 6px;
-      height: 6px;
-      background: var(--text-tertiary);
-      border-radius: 50%;
-      animation: bounce 1.4s infinite ease-in-out;
-    }
-
-    .typing-indicator .dot:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .typing-indicator .dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes bounce {
-      0%, 80%, 100% {
-        transform: scale(0);
-        opacity: 0.3;
-      }
-      40% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    /* --- INPUT AREA --- */
-    .chat-input-area {
-      min-height: 88px;
-      background: var(--bg-card);
-      border-top: 1px solid var(--border);
-      padding: var(--space-4) var(--space-6);
-    }
-
-    .input-wrapper {
-      display: flex;
-      gap: var(--space-3);
-      align-items: flex-end;
-    }
-
-    textarea {
-      flex: 1;
-      min-height: 52px;
-      max-height: 150px;
-      padding: 14px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
-      font-size: 15px;
-      font-family: inherit;
-      background: var(--bg-main);
-      color: var(--text-main);
-      resize: none;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      line-height: 1.5;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-      background: var(--bg-card);
-    }
-
-    textarea::placeholder {
-      color: var(--text-tertiary);
-    }
-
-    .send-btn {
-      height: 52px;
-      padding: 0 24px;
-      border-radius: 14px;
-      background: var(--text-main);
-      color: #FFFFFF;
-      font-size: 15px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      min-width: 100px;
-    }
-
-    .send-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .send-btn:active {
-      transform: scale(0.98);
-    }
-
-    .send-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* --- BANNERS --- */
-    .warning-banner {
-      padding: var(--space-3) var(--space-4);
-      background: #FEF3C7;
-      border-left: 4px solid var(--warning);
-      color: #92400E;
-      font-size: 14px;
-      display: none;
-    }
-
-    .error-banner {
-      padding: var(--space-4);
-      background: #FEE2E2;
-      border-left: 4px solid var(--error);
-      color: #991B1B;
-      font-size: 14px;
-      display: none;
-    }
-
-    .error-banner strong {
-      display: block;
-      margin-bottom: var(--space-2);
-    }
-
-    .error-banner ul {
-      margin: var(--space-2) 0 0 20px;
-      padding: 0;
-    }
-
-    .error-banner a {
-      color: var(--primary);
-      text-decoration: underline;
-    }
-
-    /* --- RESPONSIVE --- */
-    @media (max-width: 768px) {
-      aside {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        z-index: 1000;
-      }
-
-      aside.open {
-        transform: translateX(0);
-      }
-
-      main {
-        margin-left: 0;
-      }
-
-      .chat-header {
-        padding: 0 var(--space-4);
-      }
-
-      .chat-messages {
-        padding: var(--space-4);
-      }
-
-      .message {
-        max-width: 85%;
-      }
-
-      .chat-input-area {
-        padding: var(--space-4);
-      }
-
-      .menu-toggle {
-        display: block;
-        position: fixed;
-        top: var(--space-4);
-        left: var(--space-4);
-        z-index: 1001;
-        width: 44px;
-        height: 44px;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
-
-    @media (min-width: 769px) {
-      .menu-toggle {
-        display: none;
-      }
-    }
-
-    /* --- UTILITY --- */
-    .hidden {
-      display: none !important;
-    }
-
-  /* --- COUNCIL SECTION --- */
-.council-section {
-  max-width: 100%;
-  margin: var(--space-12) 0;
-  padding: var(--space-6) var(--space-4);
-  background: var(--bg-card);
-  border-radius: 16px;
-  border: 1px solid var(--border);
-}
-
-
-
 
     .council-header {
       text-align: center;
@@ -577,7 +217,7 @@
     }
 
     .council-header h2 {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 700;
       color: var(--text-main);
       margin-bottom: var(--space-2);
@@ -596,32 +236,31 @@
     }
 
     .council-input {
-      min-height: 80px;
-      padding: 14px 16px;
-      border: 1.5px solid var(--border);
+      min-height: 100px;
+      padding: 16px 20px;
+      border: 2px solid var(--border);
       border-radius: 16px;
-      font-size: 15px;
+      font-size: 16px;
       font-family: inherit;
-      background: var(--bg-main);
+      background: var(--bg-card);
       color: var(--text-main);
       resize: vertical;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s;
     }
 
     .council-input:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-      background: var(--bg-card);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
     }
 
     .council-btn {
-      height: 52px;
-      padding: 0 24px;
+      height: 56px;
+      padding: 0 32px;
       border-radius: 14px;
-      background: var(--text-main);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: #FFFFFF;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       border: none;
       cursor: pointer;
@@ -631,114 +270,264 @@
 
     .council-btn:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
     }
 
     .council-btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
 
+    /* Pipeline Status */
+    .pipeline-status {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-8);
+      background: var(--bg-card);
+      border-radius: 20px;
+      margin-bottom: var(--space-6);
+      border: 1px solid var(--border);
+    }
+
+    .pipeline-status.active {
+      display: flex;
+    }
+
+    .pipeline-stages {
+      display: flex;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    .pipeline-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      opacity: 0.3;
+      transition: all 0.3s;
+    }
+
+    .pipeline-stage.active {
+      opacity: 1;
+    }
+
+    .pipeline-stage.complete {
+      opacity: 0.6;
+    }
+
+    .stage-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s;
+    }
+
+    .pipeline-stage.active .stage-icon {
+      background: var(--primary);
+      animation: pulse 1.5s infinite;
+    }
+
+    .pipeline-stage.complete .stage-icon {
+      background: var(--success);
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .stage-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .pipeline-status-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Debate Container */
     .council-debate-container {
       background: var(--bg-card);
       border-radius: 20px;
       padding: var(--space-6);
       border: 1px solid var(--border);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
       min-height: 200px;
     }
 
+    /* Persona Messages */
     .council-message {
-      margin-bottom: 20px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--bg-main);
-      animation: slideInUp 0.4s ease-out;
+      margin-bottom: 24px;
+      padding: 20px 24px;
+      border-radius: 16px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease-out forwards;
     }
 
-    /* Persona-specific colors (border-left) */
-    .council-message.stoic {
-      border-left: 4px solid #8B5CF6;
-    }
-
-    .council-message.ceo {
-      border-left: 4px solid #3B82F6;
-    }
-
-    .council-message.therapist {
-      border-left: 4px solid #10B981;
-    }
-
-    .council-message.monk {
-      border-left: 4px solid #F59E0B;
-    }
-
-    .council-message.synthesis {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #FFFFFF;
-      border-left: 4px solid #FFFFFF;
-    }
-
-    .council-speaker {
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 6px;
-      opacity: 0.9;
-    }
-
-    .council-message-text {
-      font-size: 15px;
-      line-height: 1.6;
-      color: var(--text-main);
-    }
-
-    .council-message.synthesis .council-message-text {
-      color: #FFFFFF;
-    }
-
-    .mention {
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .council-message.synthesis .mention {
-      color: #FFFFFF;
-      text-decoration: underline;
-    }
-
-    .council-loading {
-      text-align: center;
-      padding: var(--space-12) var(--space-6);
-      color: var(--text-secondary);
-      font-size: 15px;
-    }
-
-    @keyframes slideInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
+    @keyframes fadeInUp {
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
 
-    /* Mobile responsive for council */
-@media (max-width: 768px) {
-  .council-section {
-    margin: var(--space-6) auto; /* ALREADY CORRECT - centers on mobile */
-  }
+    /* Marcus - Marble/Grey, Serif */
+    .council-message.marcus {
+      background: var(--marcus-bg);
+      color: var(--marcus-text);
+      border-left: 4px solid #8B5CF6;
+      font-family: Georgia, serif;
+    }
 
-  .council-debate-container {
-    padding: var(--space-4);
-  }
+    /* Jung - Deep Indigo, Sans-serif */
+    .council-message.jung {
+      background: var(--jung-bg);
+      color: var(--jung-text);
+      border-left: 4px solid #818cf8;
+      font-family: 'Inter', sans-serif;
+    }
 
-  .council-btn {
-    width: 100%;
-  }
-}
+    /* Alex - Sharp Blue, Monospace */
+    .council-message.alex {
+      background: var(--alex-bg);
+      color: var(--alex-text);
+      border-left: 4px solid #60a5fa;
+      font-family: 'JetBrains Mono', monospace;
+    }
 
+    /* Siddhartha - Saffron/Orange */
+    .council-message.siddhartha {
+      background: var(--siddhartha-bg);
+      color: var(--siddhartha-text);
+      border-left: 4px solid #fbbf24;
+      font-family: Georgia, serif;
+      font-style: italic;
+    }
+
+    /* Synthesis */
+    .council-message.synthesis {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #FFFFFF;
+      border-left: 4px solid #FFFFFF;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .council-speaker {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .speaker-emoji {
+      font-size: 18px;
+    }
+
+    .council-message-text {
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    /* Psychological Brief Card */
+    .brief-card {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border: 1px solid #0ea5e9;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+
+    .brief-card h4 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #0369a1;
+      margin-bottom: 8px;
+    }
+
+    .brief-card p {
+      color: #0c4a6e;
+      margin-bottom: 4px;
+    }
+
+    .brief-card strong {
+      color: #0369a1;
+    }
+
+    /* Loading */
+    .council-loading {
+      text-align: center;
+      padding: var(--space-12) var(--space-6);
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      aside {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+
+      aside.open {
+        transform: translateX(0);
+      }
+
+      main {
+        margin-left: 0;
+        padding: var(--space-4);
+      }
+
+      .pipeline-stages {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .council-btn {
+        width: 100%;
+      }
+    }
+
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: var(--space-4);
+      left: var(--space-4);
+      z-index: 1001;
+      width: 44px;
+      height: 44px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .menu-toggle { display: flex; }
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -750,32 +539,35 @@
           <div class="logo-avatar">D</div>
           <div class="logo-text">
             <h1>Depth</h1>
-            <p>Mental Health AI</p>
+            <p>AI Council</p>
           </div>
         </div>
       </div>
 
       <div class="personas-section">
-        <h2>Mentors</h2>
+        <h2>The Council</h2>
         <div class="persona-list">
-          <button class="persona-btn active" data-persona="stoic" aria-label="Select Stoic mentor">
-            Stoic
+          <button class="persona-btn active" data-persona="council">
+            🏛️ Full Council Debate
           </button>
-          <button class="persona-btn" data-persona="monk" aria-label="Select Monk mentor">
-            Monk
+          <button class="persona-btn" data-persona="stoic">
+            ⚔️ Marcus (Stoic)
           </button>
-          <button class="persona-btn" data-persona="ceo" aria-label="Select CEO mentor">
-            CEO
+          <button class="persona-btn" data-persona="monk">
+            🧘 Siddhartha (Monk)
           </button>
-          <button class="persona-btn" data-persona="therapist" aria-label="Select Therapist mentor">
-            Therapist
+          <button class="persona-btn" data-persona="ceo">
+            💼 Alex (CEO)
+          </button>
+          <button class="persona-btn" data-persona="therapist">
+            🧠 Dr. Jung (Therapist)
           </button>
         </div>
       </div>
 
       <div class="sidebar-footer">
         <div class="usage-label">
-          <span>Daily Usage</span>
+          <span>API Usage</span>
           <span id="usage-text">0%</span>
         </div>
         <div class="usage-bar">
@@ -784,376 +576,201 @@
       </div>
     </aside>
 
-    <!-- Main Chat Area -->
+    <!-- Main Content -->
     <main>
-      <header class="chat-header">
-        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
-        <h2 id="currentPersonaTitle">Stoic Mentor</h2>
-      </header>
+      <button class="menu-toggle" id="menuToggle">☰</button>
 
-      <div class="warning-banner" id="warning-banner"></div>
-      <div class="error-banner" id="error-banner"></div>
-
-      <div class="chat-messages" id="chatMessages">
-        <div class="empty-state" id="emptyState">
-          <h3>Start a conversation</h3>
-          <p>Choose a prompt below or type your own message</p>
-          <div class="prompt-chips">
-            <button class="prompt-chip" data-prompt="I feel stuck and don't know what to do">I feel stuck and don't know what to do</button>
-            <button class="prompt-chip" data-prompt="How can I manage my stress better?">How can I manage my stress better?</button>
-            <button class="prompt-chip" data-prompt="I'm struggling with motivation">I'm struggling with motivation</button>
-            <button class="prompt-chip" data-prompt="Help me understand my emotions">Help me understand my emotions</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="chat-input-area">
-        <div class="input-wrapper">
-          <textarea 
-            id="messageInput" 
-            placeholder="Share what's on your mind..."
-            rows="1"
-            aria-label="Message input"
-          ></textarea>
-          <button class="send-btn" id="sendBtn" aria-label="Send message">Send</button>
-        </div>
-      </div>
-
-      <!-- PASTE COUNCIL SECTION HERE -->
-      <!-- Council Debate Section -->
-      <section id="councilSection" class="council-section">
+      <section class="council-section">
         <div class="council-header">
-          <h2>AI Council Debate</h2>
-          <p>All 4 mentors debate your question</p>
+          <h2>🏛️ The Depth Council</h2>
+          <p>Four perspectives. One question. Deep clarity.</p>
         </div>
 
         <div class="council-input-container">
           <textarea 
             id="councilQuestion" 
             class="council-input"
-            placeholder="Ask the council anything... (e.g., Should I quit my job?)"
-            rows="3"
+            placeholder="What weighs on your mind? (e.g., Should I quit my job? Why do I feel stuck?)..."
+            rows="4"
           ></textarea>
-          <button id="startCouncil" class="council-btn">Convene Council</button>
+          <button id="startCouncil" class="council-btn">⚡ Convene the Council</button>
         </div>
 
+        <!-- Pipeline Status -->
+        <div id="pipelineStatus" class="pipeline-status">
+          <div class="pipeline-stages">
+            <div class="pipeline-stage" data-stage="1">
+              <div class="stage-icon">🔍</div>
+              <div class="stage-label">Analyzing<br>Subtext</div>
+            </div>
+            <div class="pipeline-stage" data-stage="2">
+              <div class="stage-icon">📋</div>
+              <div class="stage-label">Summoning<br>Council</div>
+            </div>
+            <div class="pipeline-stage" data-stage="3">
+              <div class="stage-icon">⚔️</div>
+              <div class="stage-label">Council<br>Debating</div>
+            </div>
+            <div class="pipeline-stage" data-stage="4">
+              <div class="stage-icon">🕊️</div>
+              <div class="stage-label">Synthesizing<br>Wisdom</div>
+            </div>
+          </div>
+          <div class="pipeline-status-text" id="pipelineText">Analyzing subtext...</div>
+        </div>
+
+        <!-- Debate Output -->
         <div id="councilDebate" class="council-debate-container"></div>
       </section>
-
     </main>
   </div>
 
-
   <script>
-    // State management
-    let currentPersona = "stoic";
-    const conversationHistory = {
-      stoic: [],
-      monk: [],
-      ceo: [],
-      therapist: []
+    // ==========================================================================
+    // CONFIGURATION
+    // ==========================================================================
+    const API_BASE = 'https://depth-6oro.onrender.com';
+    const MESSAGE_DELAY = 1500; // 1.5 seconds between messages
+
+    // Persona metadata
+    const PERSONA_META = {
+      marcus: { emoji: '⚔️', name: 'Marcus', title: 'Stoic Emperor' },
+      alex: { emoji: '💼', name: 'Alex', title: 'CEO' },
+      jung: { emoji: '🧠', name: 'Dr. Jung', title: 'Depth Psychologist' },
+      siddhartha: { emoji: '🧘', name: 'Siddhartha', title: 'Buddhist Monk' },
+      synthesis: { emoji: '🏛️', name: 'Council', title: 'Consensus' }
     };
 
-    const personaTitles = {
-      stoic: "Stoic Mentor",
-      monk: "Monk Mentor",
-      ceo: "CEO Mentor",
-      therapist: "Therapist Mentor"
-    };
+    // Pipeline stage messages
+    const PIPELINE_MESSAGES = [
+      'Analyzing subtext...',
+      'Summoning the council...',
+      'Council is debating...',
+      'Synthesizing wisdom...'
+    ];
 
-    // DOM elements
+    // ==========================================================================
+    // DOM ELEMENTS
+    // ==========================================================================
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menuToggle');
-    const personaButtons = document.querySelectorAll('.persona-btn');
-    const currentPersonaTitle = document.getElementById('currentPersonaTitle');
-    const chatMessages = document.getElementById('chatMessages');
-    const emptyState = document.getElementById('emptyState');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const promptChips = document.querySelectorAll('.prompt-chip');
+    const councilQuestion = document.getElementById('councilQuestion');
+    const startCouncilBtn = document.getElementById('startCouncil');
+    const councilDebate = document.getElementById('councilDebate');
+    const pipelineStatus = document.getElementById('pipelineStatus');
+    const pipelineText = document.getElementById('pipelineText');
+    const pipelineStages = document.querySelectorAll('.pipeline-stage');
 
-    // Mobile menu toggle
+    // ==========================================================================
+    // MOBILE MENU
+    // ==========================================================================
     if (menuToggle) {
       menuToggle.addEventListener('click', () => {
         sidebar.classList.toggle('open');
       });
     }
 
-    // Persona selection
-    personaButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const persona = btn.dataset.persona;
-        selectPersona(persona);
-        if (window.innerWidth <= 768) {
-          sidebar.classList.remove('open');
+    // ==========================================================================
+    // PIPELINE STATUS ANIMATION
+    // ==========================================================================
+    function showPipeline() {
+      pipelineStatus.classList.add('active');
+      councilDebate.innerHTML = '';
+    }
+
+    function hidePipeline() {
+      pipelineStatus.classList.remove('active');
+      pipelineStages.forEach(s => {
+        s.classList.remove('active', 'complete');
+      });
+    }
+
+    function updatePipelineStage(stageNum) {
+      pipelineStages.forEach((stage, idx) => {
+        const num = idx + 1;
+        stage.classList.remove('active', 'complete');
+        if (num < stageNum) {
+          stage.classList.add('complete');
+        } else if (num === stageNum) {
+          stage.classList.add('active');
         }
       });
-    });
-
-    function selectPersona(persona) {
-      // Update active button
-      personaButtons.forEach(b => b.classList.remove('active'));
-      document.querySelector(`[data-persona="${persona}"]`).classList.add('active');
-      
-      // Update title
-      currentPersonaTitle.textContent = personaTitles[persona];
-      
-      // Reset chat display
-      currentPersona = persona;
-      chatMessages.innerHTML = '';
-      emptyState.classList.remove('hidden');
-      chatMessages.appendChild(emptyState);
-      
-      // Focus input
-      messageInput.focus();
+      pipelineText.textContent = PIPELINE_MESSAGES[stageNum - 1] || 'Processing...';
     }
 
-    // Prompt chips
-    promptChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        const prompt = chip.dataset.prompt;
-        messageInput.value = prompt;
-        messageInput.focus();
-        sendMessage();
-      });
-    });
-
-    // Auto-resize textarea
-    messageInput.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-    });
-
-    // Send message
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-
-    async function sendMessage() {
-      const message = messageInput.value.trim();
-      if (!message) return;
-
-      // Hide empty state
-      emptyState.classList.add('hidden');
-      if (emptyState.parentElement) {
-        emptyState.parentElement.removeChild(emptyState);
-      }
-
-      // Disable input while sending
-      messageInput.disabled = true;
-      sendBtn.disabled = true;
-
-      // Display user message
-      appendMessage('user', message);
-      messageInput.value = '';
-      messageInput.style.height = 'auto';
-
-      // Show typing indicator
-      const typingId = showTypingIndicator();
-
-      try {
-        // Send to backend
-        const response = await fetch('https://depth-6oro.onrender.com/chat', {
-
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            persona: currentPersona,
-            message: message,
-            history: conversationHistory[currentPersona]
-          })
-        });
-
-        const data = await response.json();
-
-        // Remove typing indicator
-        removeTypingIndicator(typingId);
-
-        // Handle rate limit error
-        if (response.status === 429 || data.error === "rate_limit_exceeded") {
-          showError(data);
-          appendMessage('bot', "⚠️ Daily limit reached. See banner above for options.");
-          return;
-        }
-
-        // Handle other errors
-        if (data.error) {
-          appendMessage('bot', `Error: ${data.message || data.error}`);
-          return;
-        }
-
-        // Display bot response
-        appendMessage('bot', data.reply);
-
-        // Update usage tracking
-        if (data.usage) {
-          updateUsage(data.usage);
-        }
-
-        // Show warning if needed
-        if (data.warning) {
-          showWarning(data.warning);
-        }
-
-        // Update conversation history
-        conversationHistory[currentPersona].push(
-          { role: 'user', content: message },
-          { role: 'assistant', content: data.reply }
-        );
-
-      } catch (error) {
-        // Remove typing indicator
-        removeTypingIndicator(typingId);
-
-        // Show error message
-        appendMessage('bot', "Network error. Please check if the backend is running.");
-      } finally {
-        // Re-enable input
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-        messageInput.focus();
+    async function simulatePipelineProgress() {
+      // Simulate pipeline stages while waiting for response
+      for (let i = 1; i <= 4; i++) {
+        updatePipelineStage(i);
+        await sleep(2000); // 2 seconds per stage
       }
     }
 
-    function appendMessage(role, content) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${role}`;
+    // ==========================================================================
+    // MESSAGE RENDERING
+    // ==========================================================================
+    function createMessageElement(speaker, message, personaId) {
+      const div = document.createElement('div');
+      const meta = PERSONA_META[personaId] || PERSONA_META.synthesis;
       
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'message-content';
-      contentDiv.textContent = content;
+      div.className = `council-message ${personaId}`;
+      div.innerHTML = `
+        <div class="council-speaker">
+          <span class="speaker-emoji">${meta.emoji}</span>
+          ${meta.name} — ${meta.title}
+        </div>
+        <div class="council-message-text">${escapeHtml(message)}</div>
+      `;
       
-      messageDiv.appendChild(contentDiv);
-      chatMessages.appendChild(messageDiv);
-      
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return div;
     }
 
-    function showTypingIndicator() {
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'message bot';
-      typingDiv.id = 'typing-indicator';
-      
-      const indicator = document.createElement('div');
-      indicator.className = 'typing-indicator';
-      indicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
-      
-      typingDiv.appendChild(indicator);
-      chatMessages.appendChild(typingDiv);
-      
-      // Scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      
-      return 'typing-indicator';
+    function createBriefCard(brief) {
+      const div = document.createElement('div');
+      div.className = 'brief-card';
+      div.innerHTML = `
+        <h4>🔍 Psychological Analysis</h4>
+        <p><strong>Surface:</strong> ${brief.surface_question || 'N/A'}</p>
+        <p><strong>Hidden Pattern:</strong> ${brief.hidden_fear || 'N/A'}</p>
+        <p><strong>Emotional Tone:</strong> ${brief.emotional_tone || 'N/A'}</p>
+      `;
+      return div;
     }
 
-    function removeTypingIndicator(id) {
-      const typingEl = document.getElementById(id);
-      if (typingEl) {
-        typingEl.remove();
+    async function displayMessagesSequentially(messages, brief, synthesis) {
+      councilDebate.innerHTML = '';
+      
+      // Optional: Show psychological brief first
+      if (brief && brief.hidden_fear) {
+        const briefCard = createBriefCard(brief);
+        councilDebate.appendChild(briefCard);
+        await sleep(MESSAGE_DELAY);
+      }
+      
+      // Display each persona message with delay
+      for (const msg of messages) {
+        const personaId = msg.persona_id || 'synthesis';
+        const element = createMessageElement(msg.speaker, msg.message, personaId);
+        councilDebate.appendChild(element);
+        
+        // Scroll to bottom
+        councilDebate.scrollTop = councilDebate.scrollHeight;
+        
+        // Wait before showing next message
+        await sleep(MESSAGE_DELAY);
+      }
+      
+      // Display synthesis last
+      if (synthesis) {
+        const synthElement = createMessageElement('Council', synthesis, 'synthesis');
+        councilDebate.appendChild(synthElement);
+        councilDebate.scrollTop = councilDebate.scrollHeight;
       }
     }
 
-    // Usage tracking
-    function updateUsage(usageData) {
-      if (!usageData) return;
-      
-      const percent = usageData.percent || 0;
-      const fill = document.getElementById('usage-fill');
-      const text = document.getElementById('usage-text');
-      
-      fill.style.width = percent + '%';
-      text.textContent = percent + '%';
-      
-      // Color coding
-      fill.classList.remove('warning', 'error');
-      if (percent >= 90) {
-        fill.classList.add('error');
-      } else if (percent >= 70) {
-        fill.classList.add('warning');
-      }
-    }
-
-    // Show warning banner
-    function showWarning(message) {
-      const banner = document.getElementById('warning-banner');
-      banner.textContent = message;
-      banner.style.display = 'block';
-      
-      setTimeout(() => {
-        banner.style.display = 'none';
-      }, 10000);
-    }
-
-    // Show error banner
-    function showError(errorData) {
-      const banner = document.getElementById('error-banner');
-      
-      let html = `<strong>${errorData.message}</strong>`;
-      
-      if (errorData.suggestions) {
-        html += '<ul>';
-        errorData.suggestions.forEach(s => {
-          html += `<li>${s}</li>`;
-        });
-        html += '</ul>';
-      }
-      
-      if (errorData.upgrade_link) {
-        html += `<p>Need more? <a href="${errorData.upgrade_link}" target="_blank">Upgrade here</a></p>`;
-      }
-      
-      banner.innerHTML = html;
-      banner.style.display = 'block';
-      
-      // Hide after 10 seconds
-      setTimeout(() => {
-        banner.style.display = 'none';
-      }, 10000);
-    }
-
-    // Load initial usage on page load
-    fetch("https://depth-6oro.onrender.com/usage")
-
-      .then(res => res.json())
-      .then(data => updateUsage(data))
-      .catch(() => {}); // Silently fail if backend not ready
-
-    // Initialize
-    messageInput.focus();
-
-    // --- COUNCIL DEBATE FUNCTIONALITY ---
-    const councilQuestion = document.getElementById('councilQuestion');
-    const startCouncilBtn = document.getElementById('startCouncil');
-    const councilDebate = document.getElementById('councilDebate');
-
-    // Persona emojis
-    const PERSONA_EMOJIS = {
-      "Marcus": "🏛️",
-      "Alex": "💼",
-      "Dr. Jung": "🧠",
-      "Siddhartha": "🧘",
-      "Council": "📊"
-    };
-
-    // Start council debate
-    startCouncilBtn.addEventListener('click', startCouncilDebate);
-
-    // Enter to submit (Shift+Enter for new line)
-    councilQuestion.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        startCouncilDebate();
-      }
-    });
-
+    // ==========================================================================
+    // MAIN COUNCIL FUNCTION
+    // ==========================================================================
     async function startCouncilDebate() {
       const question = councilQuestion.value.trim();
 
@@ -1162,34 +779,37 @@
         return;
       }
 
-      // Loading state
+      // Disable button and show pipeline
       startCouncilBtn.disabled = true;
-      startCouncilBtn.textContent = 'Council Convening...';
-      councilDebate.innerHTML = '<div class="council-loading">🗣️ Council is debating your question...</div>';
+      startCouncilBtn.textContent = '⏳ Council Convening...';
+      showPipeline();
+
+      // Start pipeline animation (runs in parallel with fetch)
+      const pipelineAnimation = simulatePipelineProgress();
 
       try {
-        const response = await fetch('https://depth-6oro.onrender.com/council/test-full', {
+        const response = await fetch(`${API_BASE}/council/debate`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            question: question
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question })
         });
 
         const data = await response.json();
 
+        // Wait for pipeline animation to complete
+        await pipelineAnimation;
+        hidePipeline();
+
         if (!response.ok) {
-          throw new Error(data.message || 'Council debate failed');
+          throw new Error(data.message || data.error || 'Council debate failed');
         }
 
-        if (data.debate) {
-          const debateDiv = document.createElement('div');
-          debateDiv.style.cssText = 'background: white; border-radius: 12px; padding: 24px; margin: 16px 0; white-space: pre-wrap; line-height: 1.8; font-family: Inter, sans-serif;';
-          debateDiv.textContent = data.debate;
-          councilDebate.innerHTML = '';
-          councilDebate.appendChild(debateDiv);
+        if (data.success) {
+          const brief = data.pipeline_stages?.psychological_brief || null;
+          const debate = data.debate || [];
+          const synthesis = data.synthesis || '';
+
+          await displayMessagesSequentially(debate, brief, synthesis);
           councilQuestion.value = '';
         } else {
           throw new Error('Invalid response format');
@@ -1197,25 +817,68 @@
 
       } catch (error) {
         console.error('Council error:', error);
+        hidePipeline();
         councilDebate.innerHTML = `
-          <div class="council-loading" style="color: #EF4444;">
-            ❌ Council debate failed. ${error.message}
-            <br><br>
-            <button onclick="location.reload()" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #E5E7EB; background: white; cursor: pointer;">
-              Retry
-            </button>
+          <div class="council-message synthesis" style="background: #ef4444;">
+            <div class="council-speaker">❌ Error</div>
+            <div class="council-message-text">
+              ${error.message || 'Council debate failed. Please try again.'}
+            </div>
           </div>
         `;
       } finally {
         startCouncilBtn.disabled = false;
-        startCouncilBtn.textContent = 'Convene Council';
+        startCouncilBtn.textContent = '⚡ Convene the Council';
       }
     }
 
-    
+    // ==========================================================================
+    // EVENT LISTENERS
+    // ==========================================================================
+    startCouncilBtn.addEventListener('click', startCouncilDebate);
+
+    councilQuestion.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        startCouncilDebate();
+      }
+    });
+
+    // ==========================================================================
+    // UTILITY FUNCTIONS
+    // ==========================================================================
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==========================================================================
+    // USAGE TRACKING
+    // ==========================================================================
+    function updateUsage(data) {
+      if (!data) return;
+      const percent = data.percent || 0;
+      const fill = document.getElementById('usage-fill');
+      const text = document.getElementById('usage-text');
+      
+      fill.style.width = percent + '%';
+      text.textContent = percent + '%';
+      
+      fill.classList.remove('warning', 'error');
+      if (percent >= 90) fill.classList.add('error');
+      else if (percent >= 70) fill.classList.add('warning');
+    }
+
+    // Load initial usage
+    fetch(`${API_BASE}/usage`)
+      .then(res => res.json())
+      .then(data => updateUsage(data))
+      .catch(() => {});
   </script>
 </body>
 </html>
-< ! - -   R e b u i l d   1 2 / 0 8 / 2 0 2 5   0 4 : 1 7 : 4 3   - - > 
- 
- 

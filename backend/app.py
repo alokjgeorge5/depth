@@ -25,7 +25,7 @@ gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 groq_client = Groq(api_key=groq_api_key)
 genai.configure(api_key=gemini_api_key)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash-001')
+gemini_model = genai.GenerativeModel('gemini-pro')
 
 # Token tracking (simple in-memory)
 token_usage = {

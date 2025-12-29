@@ -370,7 +370,7 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "groq_configured": bool(groq_api_key),
-        "gemini_configured": bool(gemini_api_key)
+        "persona_manager_loaded": persona_manager is not None
     })
 
 
@@ -378,22 +378,22 @@ def health_check():
 # LEGACY ENDPOINTS (kept for backwards compatibility)
 # =============================================================================
 
-# Basic persona definitions for legacy /chat endpoint
-PERSONAS = {
-    "stoic": MARCUS_PROMPT,
-    "monk": SIDDHARTHA_PROMPT,
-    "ceo": ALEX_PROMPT,
-    "therapist": JUNG_PROMPT
-}
-
 @app.route("/chat", methods=["POST"])
 def chat():
-    """Legacy single-persona chat endpoint"""
+    """Legacy single-persona chat endpoint - now uses PersonaManager"""
     data = request.json or {}
     persona = data.get("persona")
     message = data.get("message")
     
-    if persona not in PERSONAS:
+    # Map legacy persona names to PersonaManager keys
+    legacy_mapping = {
+        "stoic": "MARCUS",
+        "monk": "TURING",
+        "ceo": "ALEX",
+        "therapist": "MAYA"
+    }
+    
+    if persona not in legacy_mapping:
         return jsonify({"error": "Invalid persona"}), 400
     if not message:
         return jsonify({"error": "Message required"}), 400

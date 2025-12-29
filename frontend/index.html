@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Depth - AI Council Debate</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Georgia&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>The Strategy Council - Stress-Test Your Ideas</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Georgia&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <style>
     :root {
       --primary: #4F46E5;
@@ -27,7 +30,7 @@
       --space-6: 24px;
       --space-8: 32px;
       --space-12: 48px;
-      
+
       /* Persona Colors */
       --marcus-bg: #3a3a3a;
       --marcus-text: #f5f5f5;
@@ -191,8 +194,13 @@
       border-radius: 3px;
     }
 
-    .usage-bar-fill.warning { background: var(--warning); }
-    .usage-bar-fill.error { background: var(--error); }
+    .usage-bar-fill.warning {
+      background: var(--warning);
+    }
+
+    .usage-bar-fill.error {
+      background: var(--error);
+    }
 
     /* Main Area */
     main {
@@ -340,8 +348,15 @@
     }
 
     @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
     }
 
     .stage-label {
@@ -524,12 +539,17 @@
     }
 
     @media (max-width: 768px) {
-      .menu-toggle { display: flex; }
+      .menu-toggle {
+        display: flex;
+      }
     }
 
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <!-- Sidebar -->
@@ -539,7 +559,7 @@
           <div class="logo-avatar">D</div>
           <div class="logo-text">
             <h1>Depth</h1>
-            <p>AI Council</p>
+            <p>Strategy Council</p>
           </div>
         </div>
       </div>
@@ -582,18 +602,15 @@
 
       <section class="council-section">
         <div class="council-header">
-          <h2>🏛️ The Depth Council</h2>
-          <p>Four perspectives. One question. Deep clarity.</p>
+          <h2>🏛️ The Strategy Council</h2>
+          <p>Simulate your first 4 stakeholders. Stress-test your idea before you build.</p>
         </div>
 
         <div class="council-input-container">
-          <textarea 
-            id="councilQuestion" 
-            class="council-input"
-            placeholder="What weighs on your mind? (e.g., Should I quit my job? Why do I feel stuck?)..."
-            rows="4"
-          ></textarea>
-          <button id="startCouncil" class="council-btn">⚡ Convene the Council</button>
+          <textarea id="councilQuestion" class="council-input"
+            placeholder="Paste your idea, decision, or dilemma here... (e.g., Should I build this product? Is this strategy sound?)..."
+            rows="4"></textarea>
+          <button id="startCouncil" class="council-btn">⚡ Run Simulation</button>
         </div>
 
         <!-- Pipeline Status -->
@@ -601,19 +618,19 @@
           <div class="pipeline-stages">
             <div class="pipeline-stage" data-stage="1">
               <div class="stage-icon">🔍</div>
-              <div class="stage-label">Analyzing<br>Subtext</div>
+              <div class="stage-label">Analyzing<br>Market Fit</div>
             </div>
             <div class="pipeline-stage" data-stage="2">
               <div class="stage-icon">📋</div>
-              <div class="stage-label">Summoning<br>Council</div>
+              <div class="stage-label">Convening<br>Board</div>
             </div>
             <div class="pipeline-stage" data-stage="3">
               <div class="stage-icon">⚔️</div>
-              <div class="stage-label">Council<br>Debating</div>
+              <div class="stage-label">Strategic<br>Debate</div>
             </div>
             <div class="pipeline-stage" data-stage="4">
               <div class="stage-icon">🕊️</div>
-              <div class="stage-label">Synthesizing<br>Wisdom</div>
+              <div class="stage-label">Generating<br>Action Plan</div>
             </div>
           </div>
           <div class="pipeline-status-text" id="pipelineText">Analyzing subtext...</div>
@@ -643,10 +660,10 @@
 
     // Pipeline stage messages
     const PIPELINE_MESSAGES = [
-      'Analyzing subtext...',
-      'Summoning the council...',
-      'Council is debating...',
-      'Synthesizing wisdom...'
+      'Analyzing market fit...',
+      'Convening the board...',
+      'Strategic debate in progress...',
+      'Generating action plan...'
     ];
 
     // ==========================================================================
@@ -712,7 +729,7 @@
     function createMessageElement(speaker, message, personaId) {
       const div = document.createElement('div');
       const meta = PERSONA_META[personaId] || PERSONA_META.synthesis;
-      
+
       div.className = `council-message ${personaId}`;
       div.innerHTML = `
         <div class="council-speaker">
@@ -721,7 +738,7 @@
         </div>
         <div class="council-message-text">${escapeHtml(message)}</div>
       `;
-      
+
       return div;
     }
 
@@ -739,27 +756,27 @@
 
     async function displayMessagesSequentially(messages, brief, synthesis) {
       councilDebate.innerHTML = '';
-      
+
       // Optional: Show psychological brief first
       if (brief && brief.hidden_fear) {
         const briefCard = createBriefCard(brief);
         councilDebate.appendChild(briefCard);
         await sleep(MESSAGE_DELAY);
       }
-      
+
       // Display each persona message with delay
       for (const msg of messages) {
         const personaId = msg.persona_id || 'synthesis';
         const element = createMessageElement(msg.speaker, msg.message, personaId);
         councilDebate.appendChild(element);
-        
+
         // Scroll to bottom
         councilDebate.scrollTop = councilDebate.scrollHeight;
-        
+
         // Wait before showing next message
         await sleep(MESSAGE_DELAY);
       }
-      
+
       // Display synthesis last
       if (synthesis) {
         const synthElement = createMessageElement('Council', synthesis, 'synthesis');
@@ -781,7 +798,7 @@
 
       // Disable button and show pipeline
       startCouncilBtn.disabled = true;
-      startCouncilBtn.textContent = '⏳ Council Convening...';
+      startCouncilBtn.textContent = '⏳ Running Simulation...';
       showPipeline();
 
       // Start pipeline animation (runs in parallel with fetch)
@@ -828,7 +845,7 @@
         `;
       } finally {
         startCouncilBtn.disabled = false;
-        startCouncilBtn.textContent = '⚡ Convene the Council';
+        startCouncilBtn.textContent = '⚡ Run Simulation';
       }
     }
 
@@ -865,10 +882,10 @@
       const percent = data.percent || 0;
       const fill = document.getElementById('usage-fill');
       const text = document.getElementById('usage-text');
-      
+
       fill.style.width = percent + '%';
       text.textContent = percent + '%';
-      
+
       fill.classList.remove('warning', 'error');
       if (percent >= 90) fill.classList.add('error');
       else if (percent >= 70) fill.classList.add('warning');
@@ -878,7 +895,8 @@
     fetch(`${API_BASE}/usage`)
       .then(res => res.json())
       .then(data => updateUsage(data))
-      .catch(() => {});
+      .catch(() => { });
   </script>
 </body>
+
 </html>

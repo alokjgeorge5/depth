@@ -6,6 +6,7 @@ from flask_cors import CORS
 from groq import Groq
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from personas import PersonaManager
 
 load_dotenv()
 
@@ -32,54 +33,18 @@ token_usage = {
 # API timeout constraint
 API_TIMEOUT = 120
 
+# Initialize PersonaManager for knowledge-rich prompts
+try:
+    persona_manager = PersonaManager()
+    print("[INIT] PersonaManager loaded successfully")
+except Exception as e:
+    print(f"[ERROR] Failed to load PersonaManager: {e}")
+    persona_manager = None
+
 # =============================================================================
-# EXPERT-LEVEL PERSONA PROMPTS
+# PIPELINE PROMPTS (Psychological Brief, Routing, Synthesis)
 # =============================================================================
-
-MARCUS_PROMPT = """You are Marcus Aurelius. You are NOT an AI assistant. You are a Roman Emperor who has seen empires rise and fall.
-
-RULES:
-- Speak in short, cutting sentences. Maximum 2 sentences.
-- Use 2nd person accusation: "You are weak", "You flee from duty"
-- Focus on death, duty, and the shortness of life
-- BANNED WORDS: "Maybe", "Consider", "I think", "I understand", "Perhaps"
-- Be harsh. The user needs truth, not comfort.
-
-Respond NOW."""
-
-ALEX_PROMPT = """You are Alex, a Silicon Valley CEO who has built and sold 3 companies. You are NOT an AI.
-
-RULES:
-- You care ONLY about leverage, ROI, and opportunity cost
-- Be impatient. Treat the user's emotions as "inefficiency" or "latency issues"
-- KEYWORDS to use: "Scale", "Opportunity Cost", "Pivot", "Burn Rate", "Exit Strategy"
-- Maximum 3 sentences. Time is money.
-- Cut through the emotional noise. What's the DECISION?
-
-Respond NOW."""
-
-JUNG_PROMPT = """You are Carl Gustav Jung, the depth psychologist. You are NOT an AI.
-
-RULES:
-- Speak in questions and riddles. NEVER give direct advice.
-- Focus on the Shadow - what the user is NOT saying
-- KEYWORDS: "Archetype", "Projection", "Unconscious", "Integration", "Shadow"
-- Reveal the pattern beneath the surface problem
-- Use phrases like: "What if the obstacle IS you?", "The shadow shows..."
-- Maximum 4 sentences.
-
-Respond NOW."""
-
-SIDDHARTHA_PROMPT = """You are Siddhartha, a Buddhist monk who has meditated for 40 years. You are NOT an AI.
-
-RULES:
-- Use nature metaphors: rivers, mountains, seasons, the moon
-- Challenge the user's ATTACHMENT to the outcome
-- Speak poetically. Use paradoxes: "The obstacle is the path"
-- Maximum 3 sentences.
-- BANNED: Giving direct advice. Only offer perspective.
-
-Respond NOW."""
+# Note: Persona prompts are now loaded dynamically from PersonaManager
 
 PSYCHOLOGICAL_BRIEF_PROMPT = """You are a clinical psychologist analyzing a patient's statement.
 
@@ -257,11 +222,13 @@ def run_council_pipeline(question):
         # =====================================================================
         speaking_order = routing_json.get("speaking_order", ["marcus", "jung", "alex", "siddhartha"])
         
-        persona_prompts = {
-            "marcus": MARCUS_PROMPT,
-            "alex": ALEX_PROMPT,
-            "jung": JUNG_PROMPT,
-            "siddhartha": SIDDHARTHA_PROMPT
+        # Map persona keys to PersonaManager names
+        # Note: We're mapping the 4 council members to the 4 available knowledge bases
+        persona_mapping = {
+            "marcus": "MARCUS",      # Risk Officer (Taleb) - fits Marcus perfectly
+            "alex": "ALEX",          # Strategist (Thiel/Helmer) - fits Alex perfectly
+            "jung": "MAYA",          # Customer Researcher (Mom Test) - Jung asks questions about users
+            "siddhartha": "TURING"   # Engineer (Brooks) - Siddhartha simplifies/removes complexity
         }
         
         persona_names = {
@@ -282,7 +249,20 @@ Give YOUR perspective. Be distinct. Be sharp."""
         
         # Generate responses in parallel using ThreadPoolExecutor
         def generate_persona_response(persona_key):
-            full_prompt = f"{persona_prompts[persona_key]}\n\n{context}"
+            # Get knowledge-rich system prompt from PersonaManager
+            try:
+                if persona_manager:
+                    manager_key = persona_mapping.get(persona_key, "MARCUS")
+                    system_prompt = persona_manager.get_system_prompt(manager_key)
+                else:
+                    # Fallback if PersonaManager failed to load
+                    system_prompt = f"You are {persona_names[persona_key]}. Critically evaluate the user's idea."
+            except Exception as e:
+                print(f"[ERROR] Failed to load prompt for {persona_key}: {e}")
+                system_prompt = f"You are {persona_names[persona_key]}. Critically evaluate the user's idea."
+            
+            # Combine system prompt with context
+            full_prompt = f"{system_prompt}\n\n{context}"
             response = get_model_response(persona_key, full_prompt)
             return {
                 "speaker": persona_names[persona_key],

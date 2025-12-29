@@ -20,6 +20,7 @@ class PersonaManager:
         """
         self.base_dir = Path(__file__).parent
         self.config_file = self.base_dir / config_path
+        self._kb_cache = {}  # Cache for knowledge base files
         
         # Load persona configurations
         if not self.config_file.exists():
@@ -34,6 +35,7 @@ class PersonaManager:
     def load_knowledge_base(self, persona_name):
         """
         Load the knowledge base markdown file for a specific persona.
+        Uses caching to avoid re-reading files.
         
         Args:
             persona_name: Name of the persona (e.g., 'MAYA', 'ALEX')
@@ -44,6 +46,10 @@ class PersonaManager:
         Raises:
             FileNotFoundError: If the knowledge base file doesn't exist
         """
+        # Return cached content if available
+        if persona_name in self._kb_cache:
+            return self._kb_cache[persona_name]
+        
         # Map persona names to knowledge base files
         kb_mapping = {
             'MAYA': 'kb_mom_test.md',
@@ -68,7 +74,11 @@ class PersonaManager:
             )
         
         with open(kb_file, 'r', encoding='utf-8') as f:
-            return f.read()
+            content = f.read()
+        
+        # Cache the content
+        self._kb_cache[persona_name] = content
+        return content
     
     def get_system_prompt(self, persona_name):
         """

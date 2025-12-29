@@ -6,7 +6,6 @@ from flask_cors import CORS
 from groq import Groq
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-import google.generativeai as genai
 
 load_dotenv()
 
@@ -19,13 +18,9 @@ CORS(app, resources={
     }
 })
 
-# Initialize API clients
+# Initialize API client
 groq_api_key = os.getenv("GROQ_API_KEY")
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-
 groq_client = Groq(api_key=groq_api_key)
-genai.configure(api_key=gemini_api_key)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
 # Token tracking (simple in-memory)
 token_usage = {
@@ -146,30 +141,16 @@ Maximum 150 words."""
 
 def get_model_response(task_type, prompt, require_json=False):
     """
-    Brain Router: Routes tasks to the optimal model.
-    
-    Groq (Llama 3.3 70B): structure, routing, marcus, alex
-    Gemini 1.5 Flash: analysis, synthesis, jung, siddhartha
+    Brain Router: Routes ALL tasks to Groq (Llama 3.3 70B).
+    Temperature varies by task type for optimal performance.
     """
-    groq_tasks = ['structure', 'routing', 'marcus', 'alex']
-    gemini_tasks = ['analysis', 'synthesis', 'jung', 'siddhartha']
+    # Determine temperature based on task type
+    # Lower temp (0.6) for structured/analytical tasks
+    # Higher temp (0.9) for creative/empathetic personas
+    creative_tasks = ['analysis', 'synthesis', 'jung', 'siddhartha']
+    temperature = 0.9 if task_type in creative_tasks else 0.6
     
-    try:
-        if task_type in groq_tasks:
-            return call_groq(prompt, require_json=require_json)
-        elif task_type in gemini_tasks:
-            return call_gemini(prompt)
-        else:
-            # Default to Gemini for unknown tasks
-            return call_gemini(prompt)
-    except Exception as e:
-        error_msg = str(e).lower()
-        # Failover logic: if Groq 429s, try Gemini
-        if '429' in error_msg or 'rate' in error_msg:
-            if task_type in groq_tasks:
-                print(f"[FAILOVER] Groq rate-limited, falling back to Gemini for {task_type}")
-                return call_gemini(prompt)
-        raise e
+    return call_groq(prompt, require_json=require_json, temperature=temperature)
 
 
 def call_groq(prompt, require_json=False, temperature=0.7):
@@ -201,25 +182,7 @@ def call_groq(prompt, require_json=False, temperature=0.7):
         raise e
 
 
-def call_gemini(prompt, temperature=0.9):
-    """Call Gemini 1.5 Flash API"""
-    try:
-        generation_config = genai.GenerationConfig(
-            temperature=temperature,
-            max_output_tokens=1000
-        )
-        
-        response = gemini_model.generate_content(
-            prompt,
-            generation_config=generation_config,
-            request_options={"timeout": API_TIMEOUT}
-        )
-        
-        return response.text.strip()
-        
-    except Exception as e:
-        print(f"[GEMINI ERROR] {str(e)}")
-        raise e
+
 
 
 # =============================================================================

@@ -234,8 +234,8 @@ def run_council_pipeline(question):
         persona_names = {
             "marcus": "Marcus",
             "alex": "Alex", 
-            "jung": "Dr. Jung",
-            "siddhartha": "Siddhartha"
+            "jung": "Maya",
+            "siddhartha": "Turing"
         }
         
         context = f"""The user asks: "{question}"

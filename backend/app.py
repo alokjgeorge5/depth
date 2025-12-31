@@ -601,14 +601,12 @@ def chat():
 
 @app.route('/')
 def serve_frontend():
-    """Serve the frontend HTML file"""
-    # Get the directory where app.py lives (backend/)
+    """Serve the Roast Council frontend"""
     backend_dir = os.path.dirname(os.path.abspath(__file__))
-    # Go up one level to mentor/, then into frontend/cf/
-    frontend_path = os.path.join(backend_dir, '..', 'frontend', 'cf')
-    frontend_path = os.path.abspath(frontend_path)  # Normalize the path
-    print(f"[DEBUG] Serving from: {frontend_path}")  # Debug
-    return send_from_directory(frontend_path, 'depth-ai-council-final.html')
+    frontend_path = os.path.join(backend_dir, '..', 'frontend')
+    frontend_path = os.path.abspath(frontend_path)
+    print(f"[DEBUG] Serving from: {frontend_path}")
+    return send_from_directory(frontend_path, 'index.html')
 
 
 

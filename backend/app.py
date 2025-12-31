@@ -6,8 +6,9 @@ from flask_cors import CORS
 from groq import Groq
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from personas import PersonaManager
+from personas import PERSONAS, get_persona_list
 import gc
+import threading
 
 
 load_dotenv()
@@ -36,17 +37,8 @@ token_usage = {
 }
 
 
-# API timeout constraint
-API_TIMEOUT = 120
-
-
-# Initialize PersonaManager for knowledge-rich prompts
-try:
-    persona_manager = PersonaManager()
-    print("[INIT] PersonaManager loaded successfully")
-except Exception as e:
-    print(f"[ERROR] Failed to load PersonaManager: {e}")
-    persona_manager = None
+# Roast Council initialized
+print(f"[INIT] Roast Council loaded: {len(PERSONAS)} personas ready")
 
 
 # =============================================================================
@@ -439,115 +431,72 @@ conversations = {}
 @app.route("/api/getResponses", methods=["POST"])
 def get_responses():
     """
-    Frontend-friendly endpoint that matches the API contract:
-    
-    Request: { question, conversation_id }
-    Response: { conversation_id, responses: [{ persona, title, content, confidence }] }
+    Roast Council - Simple parallel execution endpoint.
+    Request: { question }
+    Response: { results: [{id, name, emoji, response}] }
     """
-    import uuid
-    
     print("\n" + "="*60)
-    print("[REQUEST] /api/getResponses called")
+    print("[ROAST COUNCIL] Request received")
     print("="*60)
     
     data = request.json or {}
-    print(f"[DATA] Received: {data}")
-    
     question = data.get("question", "").strip()
-    conversation_id = data.get("conversation_id")
     
-    print(f"[QUESTION] '{question[:100]}...' ({len(question)} chars)")
-    print(f"[CONVERSATION_ID] {conversation_id}")
-    
-    # Fix #1: Input length limit
-    MAX_QUESTION_LENGTH = 1000
-    if len(question) > MAX_QUESTION_LENGTH:
-        print(f"[ERROR] Question too long: {len(question)} chars")
-        return jsonify({
-            "error": f"Question too long (max {MAX_QUESTION_LENGTH} characters)"
-        }), 400
-    
+    # Validation
     if not question:
         print("[ERROR] No question provided")
         return jsonify({"error": "Question required"}), 400
     
-    # Generate conversation ID if not provided
-    if not conversation_id:
-        conversation_id = str(uuid.uuid4())
-        print(f"[CONVERSATION_ID] Generated new: {conversation_id}")
+    MAX_QUESTION_LENGTH = 1000
+    if len(question) > MAX_QUESTION_LENGTH:
+        print(f"[ERROR] Question too long: {len(question)} chars")
+        return jsonify({"error": f"Question too long (max {MAX_QUESTION_LENGTH} chars)"}), 400
     
-    # Run the pipeline
-    print("\n[CALLING] run_council_pipeline...")
-    result = run_council_pipeline(question)
+    print(f"[QUESTION] {question[:100]}...")
     
-    # Check for pipeline errors
-    if result.get("error"):
-        print(f"[ERROR] Pipeline failed: {result['error']}")
-        return jsonify({
-            "conversation_id": conversation_id,
-            "responses": [],
-            "error": result["error"]
-        })
+    # Parallel execution with fallback handling
+    results = {}
+    lock = threading.Lock()
     
-    # Transform debate responses to frontend format
-    persona_map = {
-        "marcus": "MARCUS",
-        "alex": "ALEX",
-        "jung": "MAYA",
-        "siddhartha": "TURING"
-    }
-    
-    title_map = {
-        "MARCUS": "Risk Assessment",
-        "ALEX": "Strategic Vision",
-        "MAYA": "Customer Insight",
-        "TURING": "Technical Analysis"
-    }
-    
-    responses = []
-    debate = result.get("debate", [])
-    
-    # Log if debate is empty
-    if not debate:
-        print(f"[WARNING] Empty debate array!")
-        print(f"[DEBUG] Pipeline stages completed: {result.get('stages_completed', [])}")
-        print(f"[DEBUG] Full result: {json.dumps(result, indent=2)}")
-    else:
-        print(f"[SUCCESS] Debate has {len(debate)} responses")
-    
-    for msg in debate:
-        persona_id = msg.get("persona_id", "marcus")
-        persona_name = persona_map.get(persona_id, "MARCUS")
+    def call_persona(persona_id):
+        persona = PERSONAS[persona_id]
+        print(f"[{persona['name']}] Calling Groq...")
         
-        # Calculate confidence based on urgency
-        urgency = result.get("debate_parameters", {}).get("urgency", 5)
-        base_confidence = 70 + (10 - urgency) * 2
-        confidence = min(95, max(60, base_confidence + len(msg.get("message", "")) % 15))
+        try:
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": persona["system_prompt"]},
+                    {"role": "user", "content": question}
+                ],
+                temperature=0.9,
+                max_tokens=150,
+                timeout=10.0
+            )
+            message = response.choices[0].message.content.strip()
+            print(f"[{persona['name']}] ✓ Response received ({len(message)} chars)")
+        except Exception as e:
+            # Fallback on ANY error (rate limit, timeout, network, etc.)
+            print(f"[{persona['name']}] ✗ Error: {e}")
+            message = persona["fallback"]
         
-        responses.append({
-            "persona": persona_name,
-            "title": title_map.get(persona_name, "Analysis"),
-            "content": msg.get("message", ""),
-            "confidence": confidence
-        })
+        with lock:
+            results[persona_id] = {
+                "id": persona_id,
+                "name": persona["name"],
+                "emoji": persona["emoji"],
+                "response": message
+            }
     
-    print(f"[RESPONSES] Formatted {len(responses)} responses for frontend")
+    # Execute all 4 personas in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(call_persona, pid) for pid in PERSONAS.keys()]
+        concurrent.futures.wait(futures, timeout=15)  # 15s max wait
     
-    # Store in conversation history
-    conversations[conversation_id] = {
-        "question": question,
-        "responses": responses
-    }
-    
-    response_data = {
-        "conversation_id": conversation_id,
-        "responses": responses
-    }
-    
-    print(f"[RESPONSE] Returning {len(responses)} responses")
+    print(f"[ROAST COUNCIL] Returning {len(results)} responses")
     print("="*60 + "\n")
     
-    return jsonify(response_data)
+    return jsonify({"results": list(results.values())})
 
 
 
@@ -681,10 +630,9 @@ def validate_startup():
         errors.append(f"❌ Groq connection failed: {e}")
     
     # Check 3: Personas loaded
-    if not persona_manager or len(persona_manager.personas) != 4:
-        count = len(persona_manager.personas) if persona_manager else 0
-        print(f"[DEBUG] Personas count: {count}")
-        errors.append(f"[X] Expected 4 personas, got {count}")
+    if len(PERSONAS) != 4:
+        print(f"[DEBUG] Personas count: {len(PERSONAS)}")
+        errors.append(f"[X] Expected 4 personas, got {len(PERSONAS)}")
     
     # Check 4: Port available
     import socket
@@ -709,7 +657,7 @@ def validate_startup():
         print("\n" + "="*60)
         print("[OK] STARTUP VALIDATION PASSED")
         print(f"[OK] Groq API: Connected")
-        print(f"[OK] Personas: {len(persona_manager.personas)} loaded")
+        print(f"[OK] Personas: {len(PERSONAS)} loaded")
         print(f"[OK] Port 5000: Available")
         print("="*60 + "\n")
 
@@ -742,6 +690,6 @@ if __name__ == "__main__":
     print(f"[STARTUP] Depth AI Council Backend")
     print(f"[STARTUP] Port: {port}")
     print(f"[STARTUP] Groq API Key: {'✓ Configured' if groq_api_key else '✗ Missing'}")
-    print(f"[STARTUP] PersonaManager: {'✓ Loaded' if persona_manager else '✗ Failed'}")
+    print(f"[STARTUP] Roast Council: {len(PERSONAS)} personas ready")
     print(f"{'='*60}\n")
     app.run(host="0.0.0.0", port=port, debug=False)

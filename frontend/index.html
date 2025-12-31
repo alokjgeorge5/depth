@@ -4,44 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Strategy Council - Stress-Test Your Ideas</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Georgia&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
+  <title>The Roast Council - Get Roasted</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #4F46E5;
-      --primary-hover: #4338CA;
-      --primary-surface: #EEF2FF;
-      --secondary: #8B5CF6;
-      --bg-main: #F9FAFB;
-      --bg-card: #FFFFFF;
-      --text-main: #111827;
-      --text-secondary: #6B7280;
-      --text-tertiary: #9CA3AF;
-      --border: #E5E7EB;
-      --success: #10B981;
-      --warning: #F59E0B;
-      --error: #EF4444;
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-6: 24px;
-      --space-8: 32px;
-      --space-12: 48px;
-
-      /* Persona Colors */
-      --marcus-bg: #3a3a3a;
-      --marcus-text: #f5f5f5;
-      --jung-bg: #312e81;
-      --jung-text: #e0e7ff;
-      --alex-bg: #1e40af;
-      --alex-text: #dbeafe;
-      --siddhartha-bg: #d97706;
-      --siddhartha-text: #fffbeb;
-    }
-
     * {
       margin: 0;
       padding: 0;
@@ -49,763 +14,277 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+      color: #ffffff;
       min-height: 100vh;
-      line-height: 1.5;
+      padding: 20px;
     }
 
-    .app-container {
-      display: flex;
-      max-width: 1400px;
+    .container {
+      max-width: 1200px;
       margin: 0 auto;
-      min-height: 100vh;
     }
 
-    /* Sidebar */
-    aside {
-      width: 320px;
-      background: var(--bg-card);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      height: 100vh;
-      overflow-y: auto;
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 40px 20px;
     }
 
-    .sidebar-header {
-      padding: var(--space-4);
-      border-bottom: 1px solid var(--border);
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+      text-shadow: 0 0 30px rgba(255, 0, 110, 0.3);
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      margin-bottom: var(--space-6);
-    }
-
-    .logo-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 18px;
-    }
-
-    .logo-text h1 {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      color: var(--text-main);
-      margin-bottom: var(--space-1);
-    }
-
-    .logo-text p {
-      font-size: 12px;
-      color: var(--text-secondary);
+    .tagline {
+      font-size: 1.2rem;
+      color: #a0a0a0;
       font-weight: 500;
-      letter-spacing: 0.025em;
-      text-transform: uppercase;
     }
 
-    .personas-section {
-      padding: var(--space-4);
+    /* Input Section */
+    .input-section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
-    .personas-section h2 {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-      margin-bottom: var(--space-3);
-    }
-
-    .persona-list {
+    .input-group {
       display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-    }
-
-    .persona-btn {
-      width: 100%;
-      padding: var(--space-3) var(--space-4);
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      text-align: left;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 400;
-      color: var(--text-main);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      min-height: 44px;
-      display: flex;
+      gap: 15px;
       align-items: center;
     }
 
-    .persona-btn:hover {
-      background: var(--primary-surface);
-      border-color: var(--primary);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .persona-btn.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: var(--space-4);
-      border-top: 1px solid var(--border);
-    }
-
-    .usage-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: var(--space-2);
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .usage-bar {
-      height: 6px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .usage-bar-fill {
-      height: 100%;
-      background: var(--success);
-      transition: width 0.3s ease;
-      border-radius: 3px;
-    }
-
-    .usage-bar-fill.warning {
-      background: var(--warning);
-    }
-
-    .usage-bar-fill.error {
-      background: var(--error);
-    }
-
-    /* Main Area */
-    main {
+    #questionInput {
       flex: 1;
-      margin-left: 320px;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-main);
-      padding: var(--space-6);
-    }
-
-    /* Council Section */
-    .council-section {
-      max-width: 900px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    .council-header {
-      text-align: center;
-      margin-bottom: var(--space-8);
-    }
-
-    .council-header h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: var(--space-2);
-    }
-
-    .council-header p {
-      font-size: 15px;
-      color: var(--text-secondary);
-    }
-
-    .council-input-container {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      margin-bottom: var(--space-8);
-    }
-
-    .council-input {
-      min-height: 100px;
-      padding: 16px 20px;
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      font-size: 16px;
-      font-family: inherit;
-      background: var(--bg-card);
-      color: var(--text-main);
-      resize: vertical;
-      transition: all 0.2s;
-    }
-
-    .council-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-    }
-
-    .council-btn {
-      height: 56px;
-      padding: 0 32px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #FFFFFF;
-      font-size: 16px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      align-self: flex-end;
-    }
-
-    .council-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
-    }
-
-    .council-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* Pipeline Status */
-    .pipeline-status {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      padding: var(--space-8);
-      background: var(--bg-card);
-      border-radius: 20px;
-      margin-bottom: var(--space-6);
-      border: 1px solid var(--border);
-    }
-
-    .pipeline-status.active {
-      display: flex;
-    }
-
-    .pipeline-stages {
-      display: flex;
-      gap: var(--space-4);
-      margin-bottom: var(--space-6);
-    }
-
-    .pipeline-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--space-2);
-      opacity: 0.3;
-      transition: all 0.3s;
-    }
-
-    .pipeline-stage.active {
-      opacity: 1;
-    }
-
-    .pipeline-stage.complete {
-      opacity: 0.6;
-    }
-
-    .stage-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      transition: all 0.3s;
-    }
-
-    .pipeline-stage.active .stage-icon {
-      background: var(--primary);
-      animation: pulse 1.5s infinite;
-    }
-
-    .pipeline-stage.complete .stage-icon {
-      background: var(--success);
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        transform: scale(1);
-      }
-
-      50% {
-        transform: scale(1.1);
-      }
-    }
-
-    .stage-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-align: center;
-    }
-
-    .pipeline-status-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    /* Debate Container */
-    .council-debate-container {
-      background: var(--bg-card);
-      border-radius: 20px;
-      padding: var(--space-6);
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-      min-height: 200px;
-    }
-
-    /* Persona Messages */
-    .council-message {
-      margin-bottom: 24px;
-      padding: 20px 24px;
-      border-radius: 16px;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeInUp 0.6s ease-out forwards;
-    }
-
-    @keyframes fadeInUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Marcus - Marble/Grey, Serif */
-    .council-message.marcus {
-      background: var(--marcus-bg);
-      color: var(--marcus-text);
-      border-left: 4px solid #8B5CF6;
-      font-family: Georgia, serif;
-    }
-
-    /* Jung - Deep Indigo, Sans-serif */
-    .council-message.jung {
-      background: var(--jung-bg);
-      color: var(--jung-text);
-      border-left: 4px solid #818cf8;
-      font-family: 'Inter', sans-serif;
-    }
-
-    /* Alex - Sharp Blue, Monospace */
-    .council-message.alex {
-      background: var(--alex-bg);
-      color: var(--alex-text);
-      border-left: 4px solid #60a5fa;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Siddhartha - Saffron/Orange */
-    .council-message.siddhartha {
-      background: var(--siddhartha-bg);
-      color: var(--siddhartha-text);
-      border-left: 4px solid #fbbf24;
-      font-family: Georgia, serif;
-      font-style: italic;
-    }
-
-    /* Synthesis */
-    .council-message.synthesis {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #FFFFFF;
-      border-left: 4px solid #FFFFFF;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .council-speaker {
-      font-weight: 700;
-      font-size: 14px;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .speaker-emoji {
-      font-size: 18px;
-    }
-
-    .council-message-text {
-      font-size: 16px;
-      line-height: 1.7;
-    }
-
-    /* Psychological Brief Card */
-    .brief-card {
-      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      border: 1px solid #0ea5e9;
+      padding: 18px 24px;
+      font-size: 1.1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      font-size: 14px;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.3s ease;
     }
 
-    .brief-card h4 {
-      font-size: 12px;
+    #questionInput:focus {
+      outline: none;
+      border-color: #ff006e;
+      box-shadow: 0 0 20px rgba(255, 0, 110, 0.3);
+    }
+
+    #questionInput::placeholder {
+      color: #666;
+    }
+
+    button {
+      padding: 18px 40px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
       text-transform: uppercase;
-      color: #0369a1;
-      margin-bottom: 8px;
+      letter-spacing: 1px;
     }
 
-    .brief-card p {
-      color: #0c4a6e;
-      margin-bottom: 4px;
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 0, 110, 0.4);
     }
 
-    .brief-card strong {
-      color: #0369a1;
+    button:active {
+      transform: translateY(0);
     }
 
     /* Loading */
-    .council-loading {
+    #loading {
+      display: none;
       text-align: center;
-      padding: var(--space-12) var(--space-6);
-      color: var(--text-secondary);
-      font-size: 16px;
+      padding: 40px;
+      font-size: 1.2rem;
+      color: #ff006e;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 0, 110, 0.2);
+      border-top-color: #ff006e;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Results Grid */
+    #resultsGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ff006e, #8338ec, #3a86ff);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(255, 0, 110, 0.3);
+      border-color: rgba(255, 0, 110, 0.5);
+    }
+
+    /* Persona-specific colors */
+    .persona-hater::before {
+      background: linear-gradient(90deg, #ff006e, #d00000);
+    }
+
+    .persona-hype::before {
+      background: linear-gradient(90deg, #3a86ff, #06ffa5);
+    }
+
+    .persona-mom::before {
+      background: linear-gradient(90deg, #ff9e00, #ffb703);
+    }
+
+    .persona-conspiracy::before {
+      background: linear-gradient(90deg, #8338ec, #3a0ca3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+      line-height: 1;
+    }
+
+    .card-header h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .response-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #e0e0e0;
+      font-weight: 400;
+    }
+
+    /* Error */
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: #ff6b6b;
+      margin-top: 20px;
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-      aside {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        z-index: 1000;
+      h1 {
+        font-size: 2.5rem;
       }
 
-      aside.open {
-        transform: translateX(0);
+      .input-group {
+        flex-direction: column;
       }
 
-      main {
-        margin-left: 0;
-        padding: var(--space-4);
-      }
-
-      .pipeline-stages {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .council-btn {
+      button {
         width: 100%;
       }
-    }
 
-    .menu-toggle {
-      display: none;
-      position: fixed;
-      top: var(--space-4);
-      left: var(--space-4);
-      z-index: 1001;
-      width: 44px;
-      height: 44px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    @media (max-width: 768px) {
-      .menu-toggle {
-        display: flex;
+      #resultsGrid {
+        grid-template-columns: 1fr;
       }
-    }
-
-    .hidden {
-      display: none !important;
     }
   </style>
 </head>
 
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside id="sidebar">
-      <div class="sidebar-header">
-        <div class="logo">
-          <div class="logo-avatar">D</div>
-          <div class="logo-text">
-            <h1>Depth</h1>
-            <p>Strategy Council</p>
-          </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1>🔥 THE ROAST COUNCIL 🔥</h1>
+      <p class="tagline">Get brutally honest feedback from 4 unhinged AI personas</p>
+    </header>
+
+    <div class="input-section">
+      <div class="input-group">
+        <input type="text" id="questionInput"
+          placeholder="What idea do you want roasted? (e.g., 'Should I launch my app?')"
+          onkeypress="if(event.key === 'Enter') askCouncil()" />
+        <button onclick="askCouncil()">ROAST ME</button>
       </div>
+    </div>
 
-      <div class="personas-section">
-        <h2>The Council</h2>
-        <div class="persona-list">
-          <button class="persona-btn active" data-persona="council">
-            🏛️ Full Council Debate
-          </button>
-          <button class="persona-btn" data-persona="stoic">
-            ⚔️ Marcus (Stoic)
-          </button>
-          <button class="persona-btn" data-persona="monk">
-            🧘 Turing (Engineer)
-          </button>
-          <button class="persona-btn" data-persona="ceo">
-            💼 Alex (CEO)
-          </button>
-          <button class="persona-btn" data-persona="therapist">
-            🧠 Maya (Researcher)
-          </button>
-        </div>
-      </div>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>The Council is deliberating...</p>
+    </div>
 
-      <div class="sidebar-footer">
-        <div class="usage-label">
-          <span>API Usage</span>
-          <span id="usage-text">0%</span>
-        </div>
-        <div class="usage-bar">
-          <div class="usage-bar-fill" id="usage-fill" style="width: 0%"></div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main>
-      <button class="menu-toggle" id="menuToggle">☰</button>
-
-      <section class="council-section">
-        <div class="council-header">
-          <h2>🏛️ The Strategy Council</h2>
-          <p>Simulate your first 4 stakeholders. Stress-test your idea before you build.</p>
-        </div>
-
-        <div class="council-input-container">
-          <textarea id="councilQuestion" class="council-input"
-            placeholder="Paste your idea, decision, or dilemma here... (e.g., Should I build this product? Is this strategy sound?)..."
-            rows="4"></textarea>
-          <button id="startCouncil" class="council-btn">⚡ Run Simulation</button>
-        </div>
-
-        <!-- Pipeline Status -->
-        <div id="pipelineStatus" class="pipeline-status">
-          <div class="pipeline-stages">
-            <div class="pipeline-stage" data-stage="1">
-              <div class="stage-icon">🔍</div>
-              <div class="stage-label">Analyzing<br>Market Fit</div>
-            </div>
-            <div class="pipeline-stage" data-stage="2">
-              <div class="stage-icon">📋</div>
-              <div class="stage-label">Convening<br>Board</div>
-            </div>
-            <div class="pipeline-stage" data-stage="3">
-              <div class="stage-icon">⚔️</div>
-              <div class="stage-label">Strategic<br>Debate</div>
-            </div>
-            <div class="pipeline-stage" data-stage="4">
-              <div class="stage-icon">🕊️</div>
-              <div class="stage-label">Generating<br>Action Plan</div>
-            </div>
-          </div>
-          <div class="pipeline-status-text" id="pipelineText">Analyzing subtext...</div>
-        </div>
-
-        <!-- Debate Output -->
-        <div id="councilDebate" class="council-debate-container"></div>
-      </section>
-    </main>
+    <div id="resultsGrid"></div>
   </div>
 
   <script>
-    // ==========================================================================
-    // CONFIGURATION
-    // ==========================================================================
-    const API_BASE = 'https://depth-6oro.onrender.com';
-    const MESSAGE_DELAY = 1500; // 1.5 seconds between messages
-
-    // Persona metadata
-    const PERSONA_META = {
-      marcus: { emoji: '⚔️', name: 'Marcus', title: 'Stoic Emperor' },
-      alex: { emoji: '💼', name: 'Alex', title: 'CEO' },
-      jung: { emoji: '🧠', name: 'Maya', title: 'Customer Researcher' },
-      siddhartha: { emoji: '🧘', name: 'Turing', title: 'Engineer' },
-      synthesis: { emoji: '🏛️', name: 'Council', title: 'Consensus' }
-    };
-
-    // Pipeline stage messages
-    const PIPELINE_MESSAGES = [
-      'Analyzing market fit...',
-      'Convening the board...',
-      'Strategic debate in progress...',
-      'Generating action plan...'
-    ];
-
-    // ==========================================================================
-    // DOM ELEMENTS
-    // ==========================================================================
-    const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menuToggle');
-    const councilQuestion = document.getElementById('councilQuestion');
-    const startCouncilBtn = document.getElementById('startCouncil');
-    const councilDebate = document.getElementById('councilDebate');
-    const pipelineStatus = document.getElementById('pipelineStatus');
-    const pipelineText = document.getElementById('pipelineText');
-    const pipelineStages = document.querySelectorAll('.pipeline-stage');
-
-    // ==========================================================================
-    // MOBILE MENU
-    // ==========================================================================
-    if (menuToggle) {
-      menuToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-      });
-    }
-
-    // ==========================================================================
-    // PIPELINE STATUS ANIMATION
-    // ==========================================================================
-    function showPipeline() {
-      pipelineStatus.classList.add('active');
-      councilDebate.innerHTML = '';
-    }
-
-    function hidePipeline() {
-      pipelineStatus.classList.remove('active');
-      pipelineStages.forEach(s => {
-        s.classList.remove('active', 'complete');
-      });
-    }
-
-    function updatePipelineStage(stageNum) {
-      pipelineStages.forEach((stage, idx) => {
-        const num = idx + 1;
-        stage.classList.remove('active', 'complete');
-        if (num < stageNum) {
-          stage.classList.add('complete');
-        } else if (num === stageNum) {
-          stage.classList.add('active');
-        }
-      });
-      pipelineText.textContent = PIPELINE_MESSAGES[stageNum - 1] || 'Processing...';
-    }
-
-    async function simulatePipelineProgress() {
-      // Simulate pipeline stages while waiting for response
-      for (let i = 1; i <= 4; i++) {
-        updatePipelineStage(i);
-        await sleep(2000); // 2 seconds per stage
-      }
-    }
-
-    // ==========================================================================
-    // MESSAGE RENDERING
-    // ==========================================================================
-    function createMessageElement(speaker, message, personaId) {
-      const div = document.createElement('div');
-      const meta = PERSONA_META[personaId] || PERSONA_META.synthesis;
-
-      div.className = `council-message ${personaId}`;
-      div.innerHTML = `
-        <div class="council-speaker">
-          <span class="speaker-emoji">${meta.emoji}</span>
-          ${meta.name} — ${meta.title}
-        </div>
-        <div class="council-message-text">${escapeHtml(message)}</div>
-      `;
-
-      return div;
-    }
-
-    function createBriefCard(brief) {
-      const div = document.createElement('div');
-      div.className = 'brief-card';
-      div.innerHTML = `
-        <h4>🔍 Psychological Analysis</h4>
-        <p><strong>Surface:</strong> ${brief.surface_question || 'N/A'}</p>
-        <p><strong>Hidden Pattern:</strong> ${brief.hidden_fear || 'N/A'}</p>
-        <p><strong>Emotional Tone:</strong> ${brief.emotional_tone || 'N/A'}</p>
-      `;
-      return div;
-    }
-
-    async function displayMessagesSequentially(messages, brief, synthesis) {
-      councilDebate.innerHTML = '';
-
-      // Optional: Show psychological brief first
-      if (brief && brief.hidden_fear) {
-        const briefCard = createBriefCard(brief);
-        councilDebate.appendChild(briefCard);
-        await sleep(MESSAGE_DELAY);
-      }
-
-      // Display each persona message with delay
-      for (const msg of messages) {
-        const personaId = msg.persona_id || 'synthesis';
-        const element = createMessageElement(msg.speaker, msg.message, personaId);
-        councilDebate.appendChild(element);
-
-        // Scroll to bottom
-        councilDebate.scrollTop = councilDebate.scrollHeight;
-
-        // Wait before showing next message
-        await sleep(MESSAGE_DELAY);
-      }
-
-      // Display synthesis last
-      if (synthesis) {
-        const synthElement = createMessageElement('Council', synthesis, 'synthesis');
-        councilDebate.appendChild(synthElement);
-        councilDebate.scrollTop = councilDebate.scrollHeight;
-      }
-    }
-
-    // ==========================================================================
-    // MAIN COUNCIL FUNCTION
-    // ==========================================================================
-    async function startCouncilDebate() {
-      const question = councilQuestion.value.trim();
+    async function askCouncil() {
+      const question = document.getElementById('questionInput').value.trim();
 
       if (!question) {
-        alert('Please enter a question for the council');
+        alert('Enter a question first!');
         return;
       }
 
-      // Disable button and show pipeline
-      startCouncilBtn.disabled = true;
-      startCouncilBtn.textContent = '⏳ Running Simulation...';
-      showPipeline();
-
-      // Start pipeline animation (runs in parallel with fetch)
-      const pipelineAnimation = simulatePipelineProgress();
+      // Show loading state
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('resultsGrid').innerHTML = '';
 
       try {
-        const response = await fetch(`${API_BASE}/council/debate`, {
+        const response = await fetch('/api/getResponses', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question })
@@ -813,89 +292,41 @@
 
         const data = await response.json();
 
-        // Wait for pipeline animation to complete
-        await pipelineAnimation;
-        hidePipeline();
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
 
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Council debate failed');
+        // Display Results
+        const grid = document.getElementById('resultsGrid');
+
+        if (data.results) {
+          data.results.forEach(persona => {
+            const card = document.createElement('div');
+            card.className = `card persona-${persona.id}`;
+            card.innerHTML = `
+                            <div class="card-header">
+                                <span class="emoji">${persona.emoji}</span>
+                                <h3>${persona.name}</h3>
+                            </div>
+                            <p class="response-text">${persona.response}</p>
+                        `;
+            grid.appendChild(card);
+          });
+        } else if (data.error) {
+          grid.innerHTML = `<div class="error">❌ ${data.error}</div>`;
         }
 
-        if (data.success) {
-          const brief = data.pipeline_stages?.psychological_brief || null;
-          const debate = data.debate || [];
-          const synthesis = data.synthesis || '';
-
-          await displayMessagesSequentially(debate, brief, synthesis);
-          councilQuestion.value = '';
-        } else {
-          throw new Error('Invalid response format');
-        }
-
-      } catch (error) {
-        console.error('Council error:', error);
-        hidePipeline();
-        councilDebate.innerHTML = `
-          <div class="council-message synthesis" style="background: #ef4444;">
-            <div class="council-speaker">❌ Error</div>
-            <div class="council-message-text">
-              ${error.message || 'Council debate failed. Please try again.'}
-            </div>
-          </div>
-        `;
-      } finally {
-        startCouncilBtn.disabled = false;
-        startCouncilBtn.textContent = '⚡ Run Simulation';
+      } catch (err) {
+        console.error('Error:', err);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('resultsGrid').innerHTML =
+          '<div class="error">🔥 The Council is overwhelmed. Try again in a moment.</div>';
       }
     }
 
-    // ==========================================================================
-    // EVENT LISTENERS
-    // ==========================================================================
-    startCouncilBtn.addEventListener('click', startCouncilDebate);
-
-    councilQuestion.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        startCouncilDebate();
-      }
+    // Auto-focus input on load
+    window.addEventListener('load', () => {
+      document.getElementById('questionInput').focus();
     });
-
-    // ==========================================================================
-    // UTILITY FUNCTIONS
-    // ==========================================================================
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // ==========================================================================
-    // USAGE TRACKING
-    // ==========================================================================
-    function updateUsage(data) {
-      if (!data) return;
-      const percent = data.percent || 0;
-      const fill = document.getElementById('usage-fill');
-      const text = document.getElementById('usage-text');
-
-      fill.style.width = percent + '%';
-      text.textContent = percent + '%';
-
-      fill.classList.remove('warning', 'error');
-      if (percent >= 90) fill.classList.add('error');
-      else if (percent >= 70) fill.classList.add('warning');
-    }
-
-    // Load initial usage
-    fetch(`${API_BASE}/usage`)
-      .then(res => res.json())
-      .then(data => updateUsage(data))
-      .catch(() => { });
   </script>
 </body>
 

@@ -1,0 +1,839 @@
+< !DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Depth AI Council</title><script src="https://cdn.tailwindcss.com"></script><style>
+
+/* CSS VARIABLES - All colors centralized */
+:root {
+    /* Agent colors */
+    --color-maya: #10B981;
+    --color-alex: #3B82F6;
+    --color-turing: #F59E0B;
+    --color-marcus: #EF4444;
+
+    /* Background layers */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f9fafb;
+    --color-bg-elevated: rgba(255, 255, 255, 0.05);
+    --color-bg-muted: #f3f4f6;
+
+    /* Text hierarchy */
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
+
+    /* Borders */
+    --color-border-default: #e5e7eb;
+    --color-border-subtle: rgba(229, 231, 235, 0.3);
+    --color-border-focus: #d1d5db;
+
+    /* Semantic colors */
+    --color-success-bg: #f0fdf4;
+    --color-success-text: #15803d;
+    --color-success-border: #bbf7d0;
+
+    --color-warning-bg: #fffbeb;
+    --color-warning-text: #b45309;
+    --color-warning-border: #fde68a;
+
+    --color-error-bg: #fef2f2;
+    --color-error-text: #b91c1c;
+    --color-error-border: #fecaca;
+}
+
+[data-theme="dark"] {
+    --color-bg-primary: #111827;
+    --color-bg-secondary: #1f2937;
+    --color-bg-elevated: rgba(255, 255, 255, 0.05);
+    --color-bg-muted: #374151;
+
+    --color-text-primary: #f3f4f6;
+    --color-text-secondary: #9ca3af;
+    --color-text-tertiary: #6b7280;
+
+    --color-border-default: #374151;
+    --color-border-subtle: rgba(55, 65, 81, 0.3);
+    --color-border-focus: #4b5563;
+
+    --color-success-bg: rgba(16, 185, 129, 0.1);
+    --color-success-text: #6ee7b7;
+    --color-success-border: rgba(16, 185, 129, 0.3);
+
+    --color-warning-bg: rgba(245, 158, 11, 0.1);
+    --color-warning-text: #fcd34d;
+    --color-warning-border: rgba(245, 158, 11, 0.3);
+
+    --color-error-bg: rgba(239, 68, 68, 0.1);
+    --color-error-text: #fca5a5;
+    --color-error-border: rgba(239, 68, 68, 0.3);
+}
+
+/* Base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Screen reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--color-alex);
+    outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes agentEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes avatarPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 4px var(--pulse-color);
+    }
+}
+
+@keyframes badgePop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes thinkingPulse {
+
+    0%,
+    80%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes errorShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-4px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility animation classes */
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-agent-enter {
+    animation: agentEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-avatar-pulse {
+    animation: avatarPulse 0.6s ease-out;
+}
+
+.animate-badge-pop {
+    animation: badgePop 0.3s ease-out;
+}
+
+.animate-error-shake {
+    animation: errorShake 0.5s ease-out;
+}
+
+.animate-slide-in-up {
+    animation: slideInUp 0.3s ease-out;
+}
+
+/* Skeleton loading */
+.skeleton {
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0.05) 50%,
+            rgba(0, 0, 0, 0) 100%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+    border-radius: 0.25rem;
+}
+
+[data-theme="dark"] .skeleton {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0) 100%);
+}
+
+/* Thinking indicator */
+.thinking-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.thinking-dots .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: thinkingPulse 1.4s ease-in-out infinite;
+}
+
+.thinking-dots .dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.thinking-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.thinking-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Message left border accent */
+.message-maya {
+    border-left: 3px solid var(--color-maya);
+}
+
+.message-alex {
+    border-left: 3px solid var(--color-alex);
+}
+
+.message-turing {
+    border-left: 3px solid var(--color-turing);
+}
+
+.message-marcus {
+    border-left: 3px solid var(--color-marcus);
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    textarea {
+        font-size: 16px !important;
+        /* Prevent iOS zoom */
+    }
+}
+
+</style><script>tailwind.config= {
+
+    darkMode: 'class',
+    theme: {
+        extend: {}
+    }
+}
+
+</script></head><body>< !-- Main Container --><div id="app" class="h-screen flex flex-col">< !-- Header --><header class="border-b bg-white/80 backdrop-blur-sm" style="border-color: var(--color-border-default)"><div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"><div class="flex items-center gap-3">< !-- Council Icon: 4 overlapping dots --><div class="relative w-8 h-8"><div class="absolute top-0 left-0 w-3.5 h-3.5 rounded-full opacity-80"
+style="background: var(--color-maya)"></div><div class="absolute top-0 right-0 w-3.5 h-3.5 rounded-full opacity-80"
+style="background: var(--color-alex)"></div><div class="absolute bottom-0 left-0 w-3.5 h-3.5 rounded-full opacity-80"
+style="background: var(--color-turing)"></div><div class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full opacity-80"
+style="background: var(--color-marcus)"></div></div><h1 class="text-lg font-medium">Depth AI Council</h1></div><button id="theme-toggle" class="p-2 rounded-full transition-colors hover:bg-opacity-10"
+style="color: var(--color-text-secondary)" aria-label="Toggle theme" type="button"><svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button></div></header>< !-- Main Messages Area --><main id="messages-container" class="flex-1 overflow-y-auto custom-scrollbar" role="log" aria-live="polite"
+aria-label="Council discussion"><div class="max-w-6xl mx-auto px-4 py-8">< !-- Placeholder --><section id="placeholder" class="flex flex-col items-center justify-center min-h-[60vh]"><div class="text-center max-w-2xl"><div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center"><svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" /></svg></div><h2 class="text-2xl font-medium mb-3">Ask the Council</h2><p class="mb-8" style="color: var(--color-text-secondary)">Four expert perspectives on your strategic question. MAYA brings customer insight,
+ALEX provides CEO vision,
+TURING offers technical depth,
+and MARCUS assesses risks. </p>< !-- Agent Pills --><div class="flex flex-wrap gap-2 justify-center" role="list" aria-label="Council members"><div class="px-3 py-1.5 rounded-full text-xs font-medium border"
+style="background: var(--color-success-bg); color: var(--color-success-text); border-color: var(--color-success-border)"
+role="listitem"><span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background: var(--color-maya)"></span>MAYA • Customer </div><div class="px-3 py-1.5 rounded-full text-xs font-medium border"
+style="background: rgba(59, 130, 246, 0.1); color: var(--color-alex); border-color: rgba(59, 130, 246, 0.3)"
+role="listitem"><span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background: var(--color-alex)"></span>ALEX • CEO </div><div class="px-3 py-1.5 rounded-full text-xs font-medium border"
+style="background: var(--color-warning-bg); color: var(--color-warning-text); border-color: var(--color-warning-border)"
+role="listitem"><span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background: var(--color-turing)"></span>TURING • Engineering </div><div class="px-3 py-1.5 rounded-full text-xs font-medium border"
+style="background: var(--color-error-bg); color: var(--color-error-text); border-color: var(--color-error-border)"
+role="listitem"><span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background: var(--color-marcus)"></span>MARCUS • Risk </div></div></div></section>< !-- Messages --><div id="messages" role="list"></div></div></main>< !-- Input Footer --><footer class="border-t" style="border-color: var(--color-border-default); background: var(--color-bg-primary)"><div class="max-w-6xl mx-auto px-4 py-4"><form id="chat-form" class="relative">< !-- Error Message --><div id="error-message" class="hidden mb-4 p-3 rounded-lg text-sm animate-error-shake"
+style="background: var(--color-error-bg); color: var(--color-error-text); border: 1px solid var(--color-error-border)"
+role="alert"><div class="flex items-start gap-2"><svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span id="error-text"></span></div></div>< !-- Input Container --><div class="shadow-lg rounded-3xl border transition-all duration-200 backdrop-blur-sm"
+style="border-color: var(--color-border-subtle); background: var(--color-bg-elevated)" id="input-container"><div class="px-4 py-3"><label for="question-input" class="sr-only">Your question to the council</label><textarea id="question-input" rows="3" placeholder="Ask the council a strategic question..."
+class="w-full resize-none outline-none text-base"
+style="background: transparent; color: var(--color-text-primary)"
+aria-label="Question input"></textarea></div>< !-- Action Bar --><div class="flex items-center justify-between px-4 pb-3 pt-1"><div class="text-xs" style="color: var(--color-text-tertiary)"><span id="char-count">0</span>characters </div><div class="flex items-center gap-2"><button type="button" id="clear-btn"
+class="hidden px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+style="color: var(--color-text-secondary)" aria-label="Clear input">Clear </button><button type="submit" id="submit-btn" disabled class="px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+style="background: var(--color-text-primary); color: var(--color-bg-primary)"
+aria-label="Submit question"><span>Ask Council</span><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg></button></div></div></div></form></div></footer></div><script> // CONFIGURATION
+
+const AGENTS= {
+    MAYA: {
+        name: 'MAYA', title: 'Customer', color: 'var(--color-maya)'
+    }
+
+    ,
+    ALEX: {
+        name: 'ALEX', title: 'CEO', color: 'var(--color-alex)'
+    }
+
+    ,
+    TURING: {
+        name: 'TURING', title: 'Engineering', color: 'var(--color-turing)'
+    }
+
+    ,
+    MARCUS: {
+        name: 'MARCUS', title: 'Risk', color: 'var(--color-marcus)'
+    }
+}
+
+;
+
+const TYPING_SPEED=15; // ms per character
+const AGENT_STAGGER_DELAY=800; // ms between agents
+const PUNCTUATION_PAUSE=200; // ms at punctuation
+
+// STATE
+const state= {
+    conversationId: null,
+        isLoading: false,
+        typingIntervals: []
+}
+
+;
+
+// DOM ELEMENTS
+const elements= {
+    form: document.getElementById('chat-form'),
+        input: document.getElementById('question-input'),
+        submitBtn: document.getElementById('submit-btn'),
+        clearBtn: document.getElementById('clear-btn'),
+        charCount: document.getElementById('char-count'),
+        messages: document.getElementById('messages'),
+        placeholder: document.getElementById('placeholder'),
+        container: document.getElementById('messages-container'),
+        errorMessage: document.getElementById('error-message'),
+        errorText: document.getElementById('error-text'),
+        themeToggle: document.getElementById('theme-toggle'),
+        inputContainer: document.getElementById('input-container')
+}
+
+;
+
+// THEME MANAGEMENT
+function initTheme() {
+    const isDark=localStorage.getItem('theme')==='dark' || ( !localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', isDark);
+}
+
+elements.themeToggle.addEventListener('click', ()=> {
+        const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+        const newTheme=isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        document.documentElement.classList.toggle('dark', newTheme==='dark');
+        localStorage.setItem('theme', newTheme);
+    });
+
+initTheme();
+
+// INPUT HANDLERS
+elements.input.addEventListener('input', (e)=> {
+        const value=e.target.value.trim();
+        elements.charCount.textContent=value.length;
+        elements.submitBtn.disabled=value.length===0 || state.isLoading;
+        elements.clearBtn.classList.toggle('hidden', value.length===0);
+
+        // Auto-resize
+        e.target.style.height='auto';
+        e.target.style.height=Math.min(e.target.scrollHeight, 200) + 'px';
+    });
+
+elements.clearBtn.addEventListener('click', ()=> {
+        elements.input.value='';
+        elements.input.style.height='auto';
+        elements.charCount.textContent='0';
+        elements.submitBtn.disabled=true;
+        elements.clearBtn.classList.add('hidden');
+        elements.input.focus();
+    });
+
+// INPUT CONTAINER INTERACTIONS
+elements.inputContainer.addEventListener('mouseenter', ()=> {
+        elements.inputContainer.style.borderColor='var(--color-border-default)';
+    });
+
+elements.inputContainer.addEventListener('mouseleave', ()=> {
+        if (document.activeElement !==elements.input) {
+            elements.inputContainer.style.borderColor='var(--color-border-subtle)';
+        }
+    });
+
+elements.input.addEventListener('focus', ()=> {
+        elements.inputContainer.style.borderColor='var(--color-border-focus)';
+        elements.inputContainer.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)';
+    });
+
+elements.input.addEventListener('blur', ()=> {
+        elements.inputContainer.style.borderColor='var(--color-border-subtle)';
+        elements.inputContainer.style.boxShadow='none';
+    });
+
+// ERROR HANDLING
+function showError(message) {
+    elements.errorText.textContent=message;
+    elements.errorMessage.classList.remove('hidden');
+    elements.errorMessage.classList.add('animate-error-shake');
+
+    setTimeout(()=> {
+            elements.errorMessage.classList.add('hidden');
+            elements.errorMessage.classList.remove('animate-error-shake');
+        }
+
+        , 5000);
+}
+
+function hideError() {
+    elements.errorMessage.classList.add('hidden');
+}
+
+// SCROLL
+function scrollToBottom(smooth=true) {
+    elements.container.scrollTo({
+        top: elements.container.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+    });
+}
+
+// CONFIDENCE BADGE
+function getConfidenceStyle(score) {
+    if (score >=80) {
+        return {
+            bg: 'var(--color-success-bg)',
+                text: 'var(--color-success-text)',
+                border: 'var(--color-success-border)'
+        }
+
+        ;
+    }
+
+    if (score >=60) {
+        return {
+            bg: 'var(--color-warning-bg)',
+                text: 'var(--color-warning-text)',
+                border: 'var(--color-warning-border)'
+        }
+
+        ;
+    }
+
+    return {
+        bg: 'var(--color-error-bg)',
+            text: 'var(--color-error-text)',
+            border: 'var(--color-error-border)'
+    }
+
+    ;
+}
+
+// MESSAGE RENDERING
+function escapeHtml(text) {
+    const div=document.createElement('div');
+    div.textContent=text;
+    return div.innerHTML;
+}
+
+function createUserMessage(question) {
+    const article=document.createElement('article');
+    article.className='mb-8 animate-fade-in';
+    article.setAttribute('role', 'article');
+
+    article.innerHTML=` <div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1"
+
+    style="background: var(--color-bg-muted)"><svg class="w-4 h-4" style="color: var(--color-text-secondary)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div><div class="flex-1"><div class="text-sm font-medium mb-1">You</div><div class="text-sm leading-relaxed" style="color: var(--color-text-primary)">$ {
+        escapeHtml(question)
+    }
+
+    </div></div></div>`;
+
+    return article;
+}
+
+function createThinkingIndicator() {
+    const div=document.createElement('div');
+    div.id='thinking-indicator';
+    div.className='mb-6 animate-fade-in';
+
+    div.innerHTML=` <div class="flex items-center gap-2" style="color: var(--color-text-tertiary)"><div class="thinking-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><span class="text-sm">Council deliberating...</span></div>`;
+
+    return div;
+}
+
+function createAgentSkeleton(agentKey) {
+    const agent=AGENTS[agentKey];
+    const article=document.createElement('article');
+    article.className='mb-6 pl-3 animate-agent-enter message-'+agentKey.toLowerCase();
+
+    article.innerHTML=` <div class="flex items-start gap-3"><div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 text-white text-sm font-bold"
+
+    style="background: ${agent.color}; opacity: 0.6">$ {
+        agent.name[0]
+    }
+
+    </div><div class="flex-1"><div class="flex items-center gap-2 mb-2"><span class="text-sm font-medium">$ {
+        agent.name
+    }
+
+    </span><span class="text-xs" style="color: var(--color-text-tertiary)">$ {
+        agent.title
+    }
+
+    </span></div><div class="space-y-2"><div class="h-3 skeleton" style="width: 90%"></div><div class="h-3 skeleton" style="width: 75%"></div><div class="h-3 skeleton" style="width: 85%"></div></div></div></div>`;
+
+    return article;
+}
+
+function createLoadingState() {
+    const container=document.createElement('div');
+    container.id='loading-state';
+    container.className='space-y-6';
+
+    Object.keys(AGENTS).forEach(key=> {
+            container.appendChild(createAgentSkeleton(key));
+        });
+
+    return container;
+}
+
+async function revealMessageWithTyping(article, agent, response) {
+    return new Promise((resolve)=> {
+            const agentConfig=AGENTS[agent.persona];
+            const borderClass='message-' + agent.persona.toLowerCase();
+
+            article.className='mb-6 pl-3 animate-agent-enter ' + borderClass;
+            article.setAttribute('role', 'article');
+
+            // Create structure
+            const avatarDiv=document.createElement('div');
+            avatarDiv.className='w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 text-white text-sm font-bold animate-avatar-pulse';
+
+            avatarDiv.style.cssText=`background: $ {
+                agentConfig.color
+            }
+
+            ; --pulse-color: $ {
+                agentConfig.color
+            }
+
+            33`;
+            avatarDiv.textContent=agentConfig.name[0];
+
+            const contentWrapper=document.createElement('div');
+            contentWrapper.className='flex-1';
+
+            const headerDiv=document.createElement('div');
+            headerDiv.className='flex items-center gap-2 mb-2';
+
+            headerDiv.innerHTML=` <span class="text-sm font-medium" >$ {
+                agentConfig.name
+            }
+
+            </span> <span class="text-xs" style="color: var(--color-text-tertiary)" >$ {
+                agentConfig.title
+            }
+
+            </span> `;
+
+            const titleDiv=document.createElement('div');
+
+            if (response.title) {
+                titleDiv.className='text-sm font-medium mb-2';
+                titleDiv.textContent=response.title;
+            }
+
+            const contentDiv=document.createElement('div');
+            contentDiv.className='text-sm leading-relaxed';
+            contentDiv.style.color='var(--color-text-primary)';
+
+            const badgeDiv=document.createElement('div');
+            badgeDiv.className='mt-2 hidden';
+
+            contentWrapper.appendChild(headerDiv);
+            if (response.title) contentWrapper.appendChild(titleDiv);
+            contentWrapper.appendChild(contentDiv);
+            contentWrapper.appendChild(badgeDiv);
+
+            const flexContainer=document.createElement('div');
+            flexContainer.className='flex items-start gap-3';
+            flexContainer.appendChild(avatarDiv);
+            flexContainer.appendChild(contentWrapper);
+
+            article.appendChild(flexContainer);
+
+            // Type out content
+            let index=0;
+            const content=response.content;
+
+            const typeChar=()=> {
+                if (index < content.length) {
+                    contentDiv.textContent +=content[index];
+                    index++;
+
+                    // Pause at punctuation
+                    if (['.', ',', '?', '!'].includes(content[index - 1])) {
+                        setTimeout(typeChar, PUNCTUATION_PAUSE);
+                    }
+
+                    else {
+                        setTimeout(typeChar, TYPING_SPEED);
+                    }
+
+                    scrollToBottom();
+                }
+
+                else {
+                    // Show confidence badge
+                    const colors=getConfidenceStyle(response.confidence);
+                    badgeDiv.className='mt-2 animate-badge-pop';
+                    badgeDiv.innerHTML=` <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium border"
+
+                    style="background: ${colors.bg}; color: ${colors.text}; border-color: ${colors.border}" > $ {
+                        response.confidence
+                    }
+
+                    % </span> `;
+
+                    resolve();
+                }
+            }
+
+            ;
+
+            typeChar();
+        });
+}
+
+// API CALL
+async function submitQuestion(question) {
+    hideError();
+    state.isLoading=true;
+    elements.submitBtn.disabled=true;
+    elements.input.disabled=true;
+    elements.placeholder.classList.add('hidden');
+
+    // Add user message
+    elements.messages.appendChild(createUserMessage(question));
+
+    // Add thinking indicator
+    elements.messages.appendChild(createThinkingIndicator());
+    scrollToBottom();
+
+    // Add skeleton
+    const loadingState=createLoadingState();
+    elements.messages.appendChild(loadingState);
+    scrollToBottom();
+
+    try {
+        const response=await fetch('/api/getResponses', {
+
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+
+            ,
+            body: JSON.stringify({
+                question: question,
+                conversation_id: state.conversationId
+            })
+    });
+
+if ( !response.ok) throw new Error(`Server error: $ {
+        response.status
+    }
+
+    `);
+
+const data=await response.json();
+
+if (data.conversation_id) {
+    state.conversationId=data.conversation_id;
+}
+
+// Remove thinking and skeleton
+document.getElementById('thinking-indicator')?.remove();
+loadingState.remove();
+
+// Reveal responses with stagger
+if (data.responses && data.responses.length > 0) {
+    for (let i=0; i < data.responses.length; i++) {
+        const article=document.createElement('article');
+        elements.messages.appendChild(article);
+        await revealMessageWithTyping(article, data.responses[i], data.responses[i]);
+
+        if (i < data.responses.length - 1) {
+            await new Promise(resolve=> setTimeout(resolve, AGENT_STAGGER_DELAY));
+        }
+    }
+}
+
+else {
+    throw new Error('No responses received');
+}
+
+scrollToBottom();
+
+}
+
+catch (error) {
+    console.error('Error:', error);
+    document.getElementById('thinking-indicator')?.remove();
+    loadingState.remove();
+    showError(error.message || 'Failed to get responses. Please try again.');
+}
+
+finally {
+    state.isLoading=false;
+    elements.input.disabled=false;
+    elements.input.value='';
+    elements.input.style.height='auto';
+    elements.charCount.textContent='0';
+    elements.submitBtn.disabled=true;
+    elements.clearBtn.classList.add('hidden');
+    elements.input.focus();
+}
+}
+
+// FORM SUBMISSION
+elements.form.addEventListener('submit', async (e)=> {
+        e.preventDefault();
+        const question=elements.input.value.trim();
+
+        if (question && !state.isLoading) {
+            await submitQuestion(question);
+        }
+    });
+
+// KEYBOARD SHORTCUTS
+elements.input.addEventListener('keydown', (e)=> {
+        if ((e.metaKey || e.ctrlKey) && e.key==='Enter') {
+            e.preventDefault();
+
+            if ( !elements.submitBtn.disabled) {
+                elements.form.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+
+// FOCUS ON LOAD
+elements.input.focus();
+
+</script></body></html>

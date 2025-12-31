@@ -581,7 +581,7 @@
             scrollToBottom();
 
             try {
-                const response = await fetch('http://localhost:5000/api/getResponses', {
+                const response = await fetch('/api/getResponses', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
